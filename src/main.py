@@ -19,7 +19,7 @@ def normalize_image(input_path, output_path, size=(256, 256)):
     # resize
     img = img.resize(size)
 
-    # ensure output folder exists
+    # check output folder exists
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
     # save
