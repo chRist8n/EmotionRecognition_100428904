@@ -1,4 +1,4 @@
-# EmotionRecognition_100428904
+# Emotion Recognition - 100428904
 Y3P Project by Christian Iannotta
 
 ## Overview
