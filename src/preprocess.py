@@ -37,9 +37,11 @@ def normalize_image(input_path, output_path, size=(256, 256)):
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     np.save(output_path.replace(".jpg", ".npy"), arr)
 
-        #save as jpg for debugging
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    img.save(output_path)
+    #save as jpg for debugging
+    #{
+    os.makedirs(os.path.dirname("data/debugging_images/test_normalized.jpg"), exist_ok=True)
+    img.save("data/debugging_images/test_normalized.jpg")
+    #}
 
     return output_path
 
