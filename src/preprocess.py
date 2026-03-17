@@ -2,7 +2,7 @@ from PIL import Image
 import os
 import numpy as np
 
-def normalize_image(input_path, output_path, size=(256, 256)):
+def preprocess_image(input_path, output_path, size=(256, 256)):
     """
     Recieves an unprocessed image and applies the following:
     - greyscale
@@ -27,7 +27,7 @@ def normalize_image(input_path, output_path, size=(256, 256)):
     # resize
     img = img.resize(size)
 
-    # scale pixels
+    # scale down pixel values
     arr = np.array(img).astype("float32")
     arr /= 255.0        # scale from 0-255 to 0-1
 
@@ -39,8 +39,8 @@ def normalize_image(input_path, output_path, size=(256, 256)):
 
     #save as jpg for debugging
     #{
-    os.makedirs(os.path.dirname("data/debugging_images/test_normalized.jpg"), exist_ok=True)
-    img.save("data/debugging_images/test_normalized.jpg")
+    #os.makedirs(os.path.dirname("data/debugging_images/test_normalized.jpg"), exist_ok=True)
+    #img.save("data/debugging_images/test_normalized.jpg")
     #}
 
     return output_path
@@ -49,5 +49,5 @@ if __name__ == "__main__":
     test_input = "data/raw/RAF_DB/DATASET/train/1/train_00012_aligned.jpg" 
     test_output = "data/debugging_images/test_normalized.jpg"
 
-    result = normalize_image(test_input, test_output)
+    result = preprocess_image(test_input, test_output)
     print("Saved to: ", result)
