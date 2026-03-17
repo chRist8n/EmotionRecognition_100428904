@@ -30,7 +30,7 @@ try:
             break
 
         #preprocess
-        frame = preprocess_image()
+        frame = preprocess_image(frame)
 
         #detect face(s)
 
