@@ -6,7 +6,7 @@ from detection.sliding_window import sliding_window
 # size = 32
 # step = 8
 # threshold = -1
-def detect_faces(image, window_size=32, step=8, threshold=-1):
+def detect_faces(image, window_size=64, step=32, threshold=-1):
     integral = compute_integral_image(image)
 
     detections = []
