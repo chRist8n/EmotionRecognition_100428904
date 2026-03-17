@@ -1,5 +1,5 @@
 import numpy as np
-from integral_image import compute_integral_image
+#from detection.integral_image import compute_integral_image
 
 def rect_sum(integral, x, y, w, h):
     A = integral[y-1, x-1] if x > 0 and y > 0 else 0
@@ -26,6 +26,6 @@ if __name__ == "__main__":
     [3, 4]
     ], dtype=np.float32)
 
-    integral = compute_integral_image(img)
+    #integral = compute_integral_image(img)
 
-    print(haar_feature_horizontal(integral, 0, 0, 2, 2))
+    #print(haar_feature_horizontal(integral, 0, 0, 2, 2))
