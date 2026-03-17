@@ -32,3 +32,5 @@ if __name__ == "__main__":
     ])
 
     print(compute_integral_image(img))
+    #output should be - [1, 3,
+    #                   4, 10]
