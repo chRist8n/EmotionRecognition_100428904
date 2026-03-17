@@ -10,7 +10,7 @@ def preprocess_image(input, output_path="", size=(256, 256)):
     - pixel scaling
     
     Parameters:
-        input_path (str)/(array) : Filepath for input (MAYBE CHANGE TO INPUT IMAGE DIRECTLY)
+        input (str)/(array) : Filepath for input (MAYBE CHANGE TO INPUT IMAGE DIRECTLY)
         output_path (str)/(array) : Filepath to save the result to
         size (tuple:int) : Size to resize image to
     ((Note that the input can either be a filepath or a numpy 

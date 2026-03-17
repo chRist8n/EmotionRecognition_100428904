@@ -5,8 +5,8 @@ has been fedthrough the algorithm(s) for debugging purposes.
     debugging
 -   Quit with [`] key
 """
-from preprocess import preprocess_image
-from detection.face_detector import detect_faces
+import preprocess
+import detection.face_detector as detector
 import cv2
 import importlib
 
@@ -20,22 +20,22 @@ try:
         #reload all imported files from this project every 10 frames
         frame_count += 1
         if frame_count % 10 == 0:
-            importlib.reload(preprocess_image)
-            importlib.reload(detect_faces)
-            frame_count = 0
+            importlib.reload(preprocess)
+            importlib.reload(detector)
 
         #capture frame
-        ret, frame = cap.read() 
+        ret, raw_frame = cap.read() 
         if not ret:         # ret will be true if frame captured successfully
-            break
+            continue        # if not ret, skip this frame
 
         #preprocess
-        frame = preprocess_image(frame)
+        frame = preprocess.preprocess_image(raw_frame)
 
         #detect face(s)
 
-        #display frame
-        cv2.imshow("Webcam", frame)
+        #display the frame
+        display_frame = (frame * 255).astype("uint8")
+        cv2.imshow("Webcam", display_frame)
 
         #exit with [`] key
         if cv2.waitKey(1) & 0xFF == ord('`'):
