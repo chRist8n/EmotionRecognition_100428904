@@ -5,14 +5,17 @@ import numpy as np
 from detection.face_detector import detect_faces
 
 def main():
-    #test face detector:
+    #Test face detector:
 
-    img = Image.open("data/debugging_images/test_normalized.npy")
+    #load preprocessed image
+    img = np.load("data/debugging_images/test_normalized.npy")
+    print("Image shape:", img.shape)
 
+    #run detector
     detections = detect_faces(img)
     print("Detections: ", detections)
 
-    # convert back to PIL for drawing
+    # convert back to PIL and draw
     img_draw = Image.fromarray((img * 255).astype(np.uint8))
     draw = ImageDraw.Draw(img_draw)
 

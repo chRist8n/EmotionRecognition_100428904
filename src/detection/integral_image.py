@@ -5,10 +5,10 @@ def compute_integral_image(image):
     Computes the integral image of a given input.
 
     Parameters:
-        image(np.array) : Image to be integrated
+        image(array) : Image to be integrated
 
     Returns:
-        (np.array) : Integral image
+        (array) : Integral image
     """
 
     h, w = image.shape
