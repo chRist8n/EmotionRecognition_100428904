@@ -1,6 +1,8 @@
+import numpy as np
 import sys
 import os
 
+#HELPERS ETC
 def rect_sum(integral, x, y, w, h):
     A = integral[y-1, x-1] if x > 0 and y > 0 else 0
     B = integral[y-1, x+w-1] if y > 0 else 0
@@ -9,6 +11,8 @@ def rect_sum(integral, x, y, w, h):
 
     return D - B - C + A
 
+
+#HORIZONTAL FEATURES:
 def haar_feature_vertical(integral, x, y, w, h):
     half_w = w // 2
 
@@ -16,8 +20,16 @@ def haar_feature_vertical(integral, x, y, w, h):
     right_sum = rect_sum(integral, x + half_w, y, half_w, h)
 
     #return left_sum - right_sum
-    return (left_sum - right_sum) / (w * h)
+    return left_sum - right_sum
+def haar_feature_vertical_2(integral, x, y, w, h):
+    third_h = h // 3
+    top = rect_sum(integral, x, y, w, third_h)
+    middle = rect_sum(integral, x, y + third_h, w, third_h)
+    bottom = rect_sum(integral, x, y + 2*third_h, w, third_h)
+    return top - middle + bottom
 
+
+#VERTICAL FEATURES
 def haar_feature_horizontal(integral, x, y, w, h):
     half_h = h // 2
 
@@ -25,18 +37,52 @@ def haar_feature_horizontal(integral, x, y, w, h):
     bottom_sum = rect_sum(integral, x, y + half_h, w, half_h)
 
     #return top_sum - bottom_sum
-    return (top_sum - bottom_sum) / (w * h)
+    return top_sum - bottom_sum
+def haar_feature_horizontal_2(integral, x, y, w, h):
+    third_w = w // 3
+    left = rect_sum(integral, x, y, third_w, h)
+    middle = rect_sum(integral, x + third_w, y, third_w, h)
+    right = rect_sum(integral, x + 2*third_w, y, third_w, h)
+    return left - middle + right
 
+def haar_feature_4(integral, x, y, w, h):
+    half_w = w // 2
+    half_h = h // 2
+    A = rect_sum(integral, x, y, half_w, half_h)
+    B = rect_sum(integral, x + half_w, y, half_w, half_h)
+    C = rect_sum(integral, x, y + half_h, half_w, half_h)
+    D = rect_sum(integral, x + half_w, y + half_h, half_w, half_h)
+    return (A - B - C + D)
+
+
+#EVALUATE WINDOW
 def evaluate_window(integral, x, y, w, h):
-    score = 0
+    """
+    Returns a normalized score for a window using multiple Haar features.
+    Higher = more likely a face.
 
-    score += haar_feature_vertical(integral, x, y, w, h)
-    score += haar_feature_horizontal(integral, x, y, w, h)
+    Parameters:
+        integral(array) : Integral of an image
+        x, y (float) : x and y coordinates
+        w, h (float) : width and height
+
+    Returns:
+        score (float) : evaluated score for window
+    """
+    score = 0.0
+
+    features = [
+        haar_feature_vertical,
+        haar_feature_horizontal,
+        haar_feature_vertical_2,
+        haar_feature_horizontal_2,
+        haar_feature_4
+    ]
+    for f in features:
+        score += f(integral, x, y, w, h) / (w * h)
 
     return score
 
-# def is_face(feature_value, threshold = -1):
-#     return feature_value < threshold
 
 if __name__ == "__main__":
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))  # ensure root is in path
