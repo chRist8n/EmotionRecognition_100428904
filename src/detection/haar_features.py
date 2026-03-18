@@ -12,7 +12,7 @@ def rect_sum(integral, x, y, w, h):
     return D - B - C + A
 
 
-#HORIZONTAL FEATURES:
+#VERTICAL FEATURES:
 def haar_feature_vertical(integral, x, y, w, h):
     half_w = w // 2
 
@@ -27,9 +27,21 @@ def haar_feature_vertical_2(integral, x, y, w, h):
     middle = rect_sum(integral, x, y + third_h, w, third_h)
     bottom = rect_sum(integral, x, y + 2*third_h, w, third_h)
     return top - middle + bottom
+def haar_feature_vertical_head(integral, x, y, w, h):
+    """
+    Vertical feature biased to the top of the window.
+    Top third is hair/forehead, bottom two-thirds is face.
+    """
+    top_h = h // 3
+    bottom_h = h - top_h
+
+    top_sum = rect_sum(integral, x, y, w, top_h)
+    bottom_sum = rect_sum(integral, x, y + top_h, w, bottom_h)
+
+    return top_sum - bottom_sum
 
 
-#VERTICAL FEATURES
+#HORIZONTAL FEATURES
 def haar_feature_horizontal(integral, x, y, w, h):
     half_h = h // 2
 
@@ -44,6 +56,14 @@ def haar_feature_horizontal_2(integral, x, y, w, h):
     middle = rect_sum(integral, x + third_w, y, third_w, h)
     right = rect_sum(integral, x + 2*third_w, y, third_w, h)
     return left - middle + right
+def haar_feature_horizontal_head(integral, x, y, w, h):
+    """
+    Horizontal feature emphasizing top region.
+    """
+    half_h = h // 2
+    top_sum = rect_sum(integral, x, y, w, half_h)
+    bottom_sum = rect_sum(integral, x, y + half_h, w, half_h)
+    return top_sum - bottom_sum
 
 def haar_feature_4(integral, x, y, w, h):
     half_w = w // 2
@@ -72,14 +92,16 @@ def evaluate_window(integral, x, y, w, h):
     score = 0.0
 
     features = [
-        haar_feature_vertical,
-        haar_feature_horizontal,
-        haar_feature_vertical_2,
-        haar_feature_horizontal_2,
-        haar_feature_4
+        #(haar_feature_vertical, 1.0),           #<-- stage right arm
+        (haar_feature_horizontal, 1.475),         #<-- tip of the head    (tends to catch background items)
+        #(haar_feature_vertical_2, 1.0),         #<-- most of the body/torso
+        (haar_feature_horizontal_2, 1),       #<-- most of the body/torso        ^ might overlap but similar performance
+        #(haar_feature_4, 1.0),                  #<-- nearly/ocassionally gets the face but gets distracted easily
+        #(haar_feature_vertical_head, 0.75),     #<-- top of head
+        #(haar_feature_horizontal_head, 1.5)     #<-- top of head (more accurate)
     ]
-    for f in features:
-        score += f(integral, x, y, w, h) / (w * h)
+    for f, weight in features:
+        score += weight * f(integral, x, y, w, h) / (w * h)
 
     return score
 

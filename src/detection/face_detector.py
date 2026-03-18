@@ -1,6 +1,7 @@
 from integral_image import compute_integral_image
 from haar_features import evaluate_window
 from sliding_window import sliding_window
+from sklearn.cluster import DBSCAN
 import numpy as np
 import sys
 import os
@@ -65,13 +66,49 @@ def non_max_suppression(boxes, scores, iou_threshold=0.3):
 
     return boxes[keep].tolist()
 
+# initial paramters - eps=15, min_samples=3
+def cluster_boxes(boxes, eps=30, min_samples=7):
+    """
+    Clusters small candidate boxes into a larger bounding boxes using Density-based spatial clustering of applications with noise (DBSCAN).
+
+    Parameters:
+        boxes(array) : list of (x, y, w, h) small candidate boxes
+        eps(float) : maximum distance between points in a cluster
+        min_samples(int) : minimum number of boxes to form a cluster
+
+    Returns:
+        clustered_boxes(array) : list of (x_min, y_min, w, h) merged boxes
+    """
+    if len(boxes) == 0:
+        return []
+
+    # compute centers of each box
+    centers = np.array([[x + w/2, y + h/2] for (x, y, w, h) in boxes])
+
+    # run DBSCAN
+    clustering = DBSCAN(eps=eps, min_samples=min_samples).fit(centers)
+    labels = clustering.labels_
+
+    clustered_boxes = []
+
+    for label in set(labels):
+        if label == -1:
+            continue  # noise, ignore
+        cluster_boxes = [boxes[i] for i in range(len(boxes)) if labels[i] == label]
+
+        # merge boxes into one bounding box
+        x_min = min([b[0] for b in cluster_boxes])
+        y_min = min([b[1] for b in cluster_boxes])
+        x_max = max([b[0] + b[2] for b in cluster_boxes])
+        y_max = max([b[1] + b[3] for b in cluster_boxes])
+
+        clustered_boxes.append((x_min, y_min, x_max - x_min, y_max - y_min))
+
+    return clustered_boxes
+
 
 #DETECT FACES
-#starting parameters:
-# size = 32
-# step = 8
-# threshold = -1
-def detect_faces(image, scales=[32, 48, 64], step=16, threshold=0.31):
+def detect_faces(image, scales=[32, 48, 64, 96], step=12, threshold=0.45):
     #approximate normalisation for contrast
     image_mean = np.mean(image)
     image_std = np.std(image) if np.std(image) > 0 else 1
@@ -92,7 +129,9 @@ def detect_faces(image, scales=[32, 48, 64], step=16, threshold=0.31):
                 detections.append((x, y, w, h))
                 scores.append(score)
 
+    # apply NMS and 
     detections = non_max_suppression(detections, scores, iou_threshold=0.3)
+    #detections = cluster_boxes(detections, eps=15, min_samples=3)
     return detections
 
 if __name__ == "__main__":
