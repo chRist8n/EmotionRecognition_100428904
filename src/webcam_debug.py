@@ -32,9 +32,14 @@ try:
         frame = preprocess.preprocess_image(raw_frame)
 
         #detect face(s)
+        detections = detector.detect_faces(frame)
 
         #display the frame
         display_frame = (frame * 255).astype("uint8")
+
+        for (x, y, w, h) in detections:
+            cv2.rectangle(display_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        
         cv2.imshow("Webcam", display_frame)
 
         #exit with [`] key
