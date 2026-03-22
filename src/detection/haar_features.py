@@ -19,7 +19,6 @@ def haar_feature_vertical(integral, x, y, w, h):
     left_sum = rect_sum(integral, x, y, half_w, h)
     right_sum = rect_sum(integral, x + half_w, y, half_w, h)
 
-    #return left_sum - right_sum
     return left_sum - right_sum
 def haar_feature_vertical_2(integral, x, y, w, h):
     third_h = h // 3
@@ -48,7 +47,6 @@ def haar_feature_horizontal(integral, x, y, w, h):
     top_sum = rect_sum(integral, x, y, w, half_h)
     bottom_sum = rect_sum(integral, x, y + half_h, w, half_h)
 
-    #return top_sum - bottom_sum
     return top_sum - bottom_sum
 def haar_feature_horizontal_2(integral, x, y, w, h):
     third_w = w // 3
