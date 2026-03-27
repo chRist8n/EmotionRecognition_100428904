@@ -93,7 +93,7 @@ def evaluate_window(integral, x, y, w, h):
         #(haar_feature_vertical, 1.0),           #<-- stage right arm
         (haar_feature_horizontal, 1.475),         #<-- tip of the head    (tends to catch background items)
         #(haar_feature_vertical_2, 1.0),         #<-- most of the body/torso
-        (haar_feature_horizontal_2, 1),       #<-- most of the body/torso        ^ might overlap but similar performance
+        #(haar_feature_horizontal_2, 1.75),       #<-- most of the body/torso        ^ might overlap but similar performance
         #(haar_feature_4, 1.0),                  #<-- nearly/ocassionally gets the face but gets distracted easily
         #(haar_feature_vertical_head, 0.75),     #<-- top of head
         #(haar_feature_horizontal_head, 1.5)     #<-- top of head (more accurate)

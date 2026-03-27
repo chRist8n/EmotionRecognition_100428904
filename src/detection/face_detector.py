@@ -67,7 +67,7 @@ def non_max_suppression(boxes, scores, iou_threshold=0.3):
     return boxes[keep].tolist()
 
 # initial paramters - eps=15, min_samples=3
-def cluster_boxes(boxes, eps=30, min_samples=7):
+def cluster_boxes(boxes, eps=10, min_samples=2):
     """
     Clusters small candidate boxes into a larger bounding boxes using Density-based spatial clustering of applications with noise (DBSCAN).
 
@@ -108,7 +108,7 @@ def cluster_boxes(boxes, eps=30, min_samples=7):
 
 
 #DETECT FACES
-def detect_faces(image, scales=[32, 48, 64, 96], step=12, threshold=0.45):
+def detect_faces(image, scales=[32, 48, 64, 96], step=12, threshold=0.9):
     #approximate normalisation for contrast
     image_mean = np.mean(image)
     image_std = np.std(image) if np.std(image) > 0 else 1
@@ -129,10 +129,11 @@ def detect_faces(image, scales=[32, 48, 64, 96], step=12, threshold=0.45):
                 detections.append((x, y, w, h))
                 scores.append(score)
 
-    # apply NMS and 
+    # apply NMS and clustering
     detections = non_max_suppression(detections, scores, iou_threshold=0.3)
-    #detections = cluster_boxes(detections, eps=15, min_samples=3)
     return detections
+    # predZone = cluster_boxes(detections, eps=15, min_samples=3)
+    # return predZone
 
 if __name__ == "__main__":
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))  # ensure root is in path

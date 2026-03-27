@@ -1,6 +1,8 @@
 from PIL import Image
+import sys
 import os
 import numpy as np
+import cv2
 
 def preprocess_image(input, output_path="", size=(256, 256)):
     """
@@ -38,6 +40,13 @@ def preprocess_image(input, output_path="", size=(256, 256)):
     # resize
     img = img.resize(size)
 
+    # to numpy array
+    arr = np.array(img).astype(np.uint8)
+
+    # CLAHE
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    arr = clahe.apply(arr)
+
     # scale down pixel values from 0-255 to 0-1
     arr = np.array(img).astype(np.float32) / 255.0
 
@@ -57,8 +66,12 @@ def preprocess_image(input, output_path="", size=(256, 256)):
 
 
 if __name__ == "__main__":
-    test_input = "data/raw/RAF_DB/DATASET/train/1/train_00012_aligned.jpg" 
-    test_output = "data/debugging_images/test_normalized.jpg"
+    # test_input = "data/raw/RAF_DB/DATASET/train/1/train_00012_aligned.jpg" 
+    # test_output = "data/debugging_images/test_normalized.jpg"
 
-    result = preprocess_image(test_input, test_output)
-    print("Saved to: ", result)
+    # result = preprocess_image(test_input, test_output)
+    # print("Saved to: ", result)
+
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))  # ensure root is in path
+    import webcam_debug  # run webcam_debug.py
+    sys.exit()
