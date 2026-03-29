@@ -106,6 +106,40 @@ def cluster_boxes(boxes, eps=10, min_samples=2):
 
     return clustered_boxes
 
+def verify_detections(image, detections):
+    if len(detections) == 0:
+        return None
+    
+    best_box = None
+    best_score = float("-inf")
+
+    for x, y, w, h in detections:
+        patch = image[y:y+h, x:x+w]
+        integral = compute_integral_image(patch)
+        feature_score = evaluate_window(integral, 0, 0, w, h)
+
+        if feature_score > best_score:
+            best_score = feature_score
+            best_box = (x, y, w, h)
+
+    return best_box
+
+def expand_box_to_face(box, image_shape):
+    x, y, w, h = box
+
+    face_x = x - int(w * 0.15)
+    face_y = y + int(h * 0.1)
+    face_w = int(w * 1.3)
+    face_h = int(h * 2.0)
+
+    # keep inside image bounds
+    img_h, img_w = image_shape
+    face_x = max(0, face_x)
+    face_y = max(0, face_y)
+    face_w = min(face_w, img_w - face_x)
+    face_h = min(face_h, img_h - face_y)
+
+    return (face_x, face_y, face_w, face_h)
 
 #DETECT FACES
 def detect_faces(image, scales=[32, 48, 64, 96], step=12, threshold=0.9):
@@ -129,11 +163,22 @@ def detect_faces(image, scales=[32, 48, 64, 96], step=12, threshold=0.9):
                 detections.append((x, y, w, h))
                 scores.append(score)
 
-    # apply NMS and clustering
+    # check for empty detections
+    if len(detections) == 0:
+        return None
+
+    # apply NMS
     detections = non_max_suppression(detections, scores, iou_threshold=0.3)
-    return detections
-    # predZone = cluster_boxes(detections, eps=15, min_samples=3)
-    # return predZone
+    
+    # verify detections
+    best_box = verify_detections(norm_image, detections)
+    if best_box is None:
+        return None
+    # return best_box
+    
+    final_pred = expand_box_to_face(best_box, image.shape)
+
+    return final_pred
 
 if __name__ == "__main__":
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))  # ensure root is in path

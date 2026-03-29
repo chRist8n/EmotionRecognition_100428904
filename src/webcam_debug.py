@@ -31,14 +31,15 @@ try:
         #preprocess
         frame = preprocess.preprocess_image(raw_frame)
 
-        #detect face(s)
-        detections = detector.detect_faces(frame)
+        #detect face
+        detection = detector.detect_faces(frame)
+        if detection is not None:
+            x, y, w, h = detection
 
         #display the frame
         display_frame = (frame * 255).astype("uint8")
 
-        for (x, y, w, h) in detections:
-            cv2.rectangle(display_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        cv2.rectangle(display_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
         
         cv2.imshow("Webcam", display_frame)
 
@@ -47,7 +48,7 @@ try:
             break
 except Exception as e:
     #incase of actual exception, print to console
-    print(f"Error: \n, {e}" )
+    print(f"Debugger - Error: \n, {e}" )
 finally:
     #always release and destroy everything on close
     cap.release()
