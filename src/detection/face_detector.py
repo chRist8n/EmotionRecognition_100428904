@@ -141,6 +141,32 @@ def expand_box_to_face(box, image_shape):
 
     return (face_x, face_y, face_w, face_h)
 
+def get_box_center(box):
+    x, y, w, h = box
+
+    center_x = x + w // 2
+    center_y = y + h // 2
+
+    return (center_x, center_y)
+
+def build_face_box_from_center(box, image_shape, face_width=90, face_height=130): #center_x, center_y, box_size, image_shape):
+    # find the centre of detected feature
+    center_x, center_y = get_box_center(box)
+
+    # build  a fixed-size box around centre 
+    # (and adjust x and y to account for feature sitting at top of head)
+    face_x = (center_x - face_width // 2) - 5
+    face_y = (center_y - face_height // 2) + 40
+
+    # keep inside image bounds
+    img_h, img_w = image_shape
+    face_x = max(0, face_x)
+    face_y = max(0, face_y)
+    face_width = min(face_width, img_w - face_x)
+    face_height = min(face_height, img_h - face_y)
+
+    return (face_x, face_y, face_width, face_height)
+
 #DETECT FACES
 def detect_faces(image, scales=[32, 48, 64, 96], step=12, threshold=0.9):
     #approximate normalisation for contrast
@@ -176,7 +202,8 @@ def detect_faces(image, scales=[32, 48, 64, 96], step=12, threshold=0.9):
         return None
     # return best_box
     
-    final_pred = expand_box_to_face(best_box, image.shape)
+    # final_pred = expand_box_to_face(best_box, image.shape)
+    final_pred = build_face_box_from_center(best_box, image.shape)
 
     return final_pred
 
