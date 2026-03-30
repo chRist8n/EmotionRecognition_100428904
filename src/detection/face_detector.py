@@ -150,13 +150,14 @@ def get_box_center(box):
     return (center_x, center_y)
 
 def build_face_box_from_center(box, image_shape, face_width=90, face_height=130): #center_x, center_y, box_size, image_shape):
-    # find the centre of detected feature
+    # find the centre of detected feature as well as its width and height (for depth estimation)
     center_x, center_y = get_box_center(box)
+    x, y, w, h = box
 
     # build  a fixed-size box around centre 
     # (and adjust x and y to account for feature sitting at top of head)
     face_x = (center_x - face_width // 2) - 5
-    face_y = (center_y - face_height // 2) + 40
+    face_y = (center_y - face_height // 2) + 45
 
     # keep inside image bounds
     img_h, img_w = image_shape
