@@ -149,7 +149,7 @@ def get_box_center(box):
 
     return (center_x, center_y)
 
-def build_face_box_from_center(box, image_shape, face_width=90, face_height=130): #center_x, center_y, box_size, image_shape):
+def build_face_box_from_center(box, image_shape, face_width=100, face_height=160): #center_x, center_y, box_size, image_shape):
     # find the centre of detected feature as well as its width and height (for depth estimation)
     center_x, center_y = get_box_center(box)
     x, y, w, h = box
@@ -157,7 +157,7 @@ def build_face_box_from_center(box, image_shape, face_width=90, face_height=130)
     # build  a fixed-size box around centre 
     # (and adjust x and y to account for feature sitting at top of head)
     face_x = (center_x - face_width // 2) - 5
-    face_y = (center_y - face_height // 2) + 45
+    face_y = (center_y - face_height // 2) + 70
 
     # keep inside image bounds
     img_h, img_w = image_shape
@@ -178,11 +178,20 @@ def detect_faces(image, scales=[32, 48, 64, 96], step=12, threshold=0.9):
     # compute integral image once for whole frame
     integral = compute_integral_image(norm_image)
 
+    # init detections and scores
     detections = []
     scores = []
 
+    # init threshold for ignoring bottom of screen 
+    # (to help prevent distraction by clothes/phones/pets etc)
+    img_h, img_w = norm_image.shape
+    bottom_ignore_y = int(img_h * 0.8)  # bottom 1/5th
+
     for scale in scales:
         for (x, y, w, h) in sliding_window(norm_image, scale, step):
+            if y + h >= bottom_ignore_y:
+                continue    # if any of the box overlaps into deadzone, next.
+
             # evaluate window on integral image
             score = evaluate_window(integral, x, y, w, h)
 
