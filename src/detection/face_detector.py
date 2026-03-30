@@ -124,22 +124,6 @@ def verify_detections(image, detections):
 
     return best_box
 
-def expand_box_to_face(box, image_shape):
-    x, y, w, h = box
-
-    face_x = x - int(w * 0.15)
-    face_y = y + int(h * 0.1)
-    face_w = int(w * 1.3)
-    face_h = int(h * 2.0)
-
-    # keep inside image bounds
-    img_h, img_w = image_shape
-    face_x = max(0, face_x)
-    face_y = max(0, face_y)
-    face_w = min(face_w, img_w - face_x)
-    face_h = min(face_h, img_h - face_y)
-
-    return (face_x, face_y, face_w, face_h)
 
 def get_box_center(box):
     x, y, w, h = box
@@ -149,7 +133,10 @@ def get_box_center(box):
 
     return (center_x, center_y)
 
-def build_face_box_from_center(box, image_shape, face_width=100, face_height=160): #center_x, center_y, box_size, image_shape):
+## NOTE: width=100, height=160 provides a tight crop at >= medium distances but cuts part
+#       of the face off at close range (when leaning forwards). for now it gives a
+#       generous amount of room but the area will be tightened later in the pipeline.
+def build_face_box_from_center(box, image_shape, face_width=130, face_height=200): #center_x, center_y, box_size, image_shape):
     # find the centre of detected feature as well as its width and height (for depth estimation)
     center_x, center_y = get_box_center(box)
     x, y, w, h = box
@@ -210,9 +197,6 @@ def detect_faces(image, scales=[32, 48, 64, 96], step=12, threshold=0.9):
     best_box = verify_detections(norm_image, detections)
     if best_box is None:
         return None
-    # return best_box
-    
-    # final_pred = expand_box_to_face(best_box, image.shape)
     final_pred = build_face_box_from_center(best_box, image.shape)
 
     return final_pred
