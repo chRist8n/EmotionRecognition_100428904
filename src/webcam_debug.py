@@ -9,6 +9,7 @@ import preprocess
 import detection.face_detector as detector
 import cv2
 import importlib
+import numpy as np
 
 
 # open webcam (0 = default camera)
@@ -30,7 +31,7 @@ try:
 
 
 
-        ## PIPELINE START:
+        ## PIPELINE START: ##
 
         """
         Steps to be completed in pipeline: (ticked with a [X] if implemented)
@@ -47,35 +48,39 @@ try:
         is outputted (at any given stage) in a cv2.imshow() window.
         """
 
-        #preprocess
+        #1) Preprocess
         frame = preprocess.preprocess_image(raw_frame)
 
-        #detect face
+        #2.1) Detect face
         detection = detector.detect_faces(frame)
-        face_crop = None    # initialise face_crop to avoid potential crashes
         if detection is not None:
             x, y, w, h = detection
-            face_crop = frame[y:y+h, x:x+w] # prepare for cropping
+        else:
+            continue # if nothing is detected, move on to next frame
 
-        #crop to new work area
-        if face_crop is not None and face_crop.size > 0:
+        #2.2) Crop to new work area (= detection)
+        face_crop = frame[y:y+h, x:x+w]
+        if face_crop.size > 0:      # resize to 256x256
             face_crop = cv2.resize(face_crop, (256, 256))
 
-        ## PIPELINE END
+        ## PIPELINE END ##
 
 
 
-        ## OUTPUT FULL FRAME
+        ####################################################################
+
+        ## OUTPUT:
+
+        # initialise full frame for display and highlight ROI
         display_frame = (frame * 255).astype("uint8")
-
-        #draw a rectangle on the image so the ROI is easily visible
         cv2.rectangle(display_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        cv2.imshow("Webcam View", display_frame)
+        # initialise cropped view for display
+        display_crop = (face_crop * 255).astype("uint8")
 
-        ##OUTPUT CROPPED VIEW
-        if face_crop is not None:
-            cropped_frame = (face_crop * 255).astype("uint8")
-            cv2.imshow("Cropped View", cropped_frame)
+        # combine and output
+        combined = cv2.hconcat([display_frame, display_crop])
+        cv2.imshow("Webcam Debug", combined)
+        
 
 
         #exit with [`] key
