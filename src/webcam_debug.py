@@ -71,15 +71,33 @@ try:
 
         ## OUTPUT:
 
-        # initialise full frame for display and highlight ROI
-        display_frame = (frame * 255).astype("uint8")
-        cv2.rectangle(display_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        # initialise cropped view for display
-        display_crop = (face_crop * 255).astype("uint8")
+        orig_h, orig_w = raw_frame.shape[:2]
+        proc_h, proc_w = frame.shape[:2]
 
-        # combine and output
-        combined = cv2.hconcat([display_frame, display_crop])
-        cv2.imshow("Webcam Debug", combined)
+        scale_x = orig_w / proc_w
+        scale_y = orig_h / proc_h
+
+        # map detection back to raw_frame
+        x_orig = int(x * scale_x)
+        y_orig = int(y * scale_y)
+        w_orig = int(w * scale_x)
+        h_orig = int(h * scale_y)
+
+        display_frame = raw_frame.copy()
+        cv2.rectangle(display_frame, (x_orig, y_orig), (x_orig + w_orig, y_orig + h_orig), (0, 255, 0), 2)
+        cv2.imshow("Webcam Debug", display_frame)
+
+
+
+        # # initialise full frame for display and highlight ROI
+        # display_frame = (frame * 255).astype("uint8")
+        # cv2.rectangle(display_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        # # initialise cropped view for display
+        # display_crop = (face_crop * 255).astype("uint8")
+
+        # # combine and output
+        # combined = cv2.hconcat([display_frame, display_crop])
+        # cv2.imshow("Webcam Debug", combined)
         
 
 
