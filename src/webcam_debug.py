@@ -31,6 +31,8 @@ try:
 
 
 
+        ####################################################################
+
         ## PIPELINE START: ##
 
         """
@@ -38,7 +40,8 @@ try:
             -   recieve frame from zoom []
             1)  apply preprocessing [X]
             2)  find face and create bounding box [X]
-            3)  crop to bounding box []
+            3)  crop raw frame to bounding box []
+                - reapply preprocessing to cropped version of raw frame
             4)  find facial landmarks []
             5)  align and normalise []
             6)  classify []
@@ -59,18 +62,6 @@ try:
             continue # if nothing is detected, move on to next frame
 
         #2.2) Crop to new work area (= detection)
-        face_crop = frame[y:y+h, x:x+w]
-        if face_crop.size > 0:      # resize to 256x256
-            face_crop = cv2.resize(face_crop, (256, 256))
-
-        ## PIPELINE END ##
-
-
-
-        ####################################################################
-
-        ## OUTPUT:
-
         orig_h, orig_w = raw_frame.shape[:2]
         proc_h, proc_w = frame.shape[:2]
 
@@ -83,9 +74,24 @@ try:
         w_orig = int(w * scale_x)
         h_orig = int(h * scale_y)
 
-        display_frame = raw_frame.copy()
-        cv2.rectangle(display_frame, (x_orig, y_orig), (x_orig + w_orig, y_orig + h_orig), (0, 255, 0), 2)
-        cv2.imshow("Webcam Debug", display_frame)
+        # crop raw frame using scaled coordinates
+        face_crop = raw_frame[y_orig:y_orig+h_orig, x_orig:x_orig+w_orig]
+
+        # check crop is valid
+        if face_crop.size == 0:
+            print("Error: Subject may be too close or out of frame")
+            continue  # skip frame if something went wrong
+
+        ## PIPELINE END ##
+
+
+
+        ####################################################################
+
+        ## OUTPUT: ##
+
+
+        cv2.imshow("Webcam Debug", face_crop)
 
 
 
@@ -100,6 +106,11 @@ try:
         # cv2.imshow("Webcam Debug", combined)
         
 
+        ## OUTPUT END ##
+
+        ####################################################################
+
+        ## EXIT CONDITIONS:
 
         #exit with [`] key
         if cv2.waitKey(1) & 0xFF == ord('`'):
