@@ -1,6 +1,11 @@
-from integral_image import compute_integral_image
-from haar_features import evaluate_window
-from sliding_window import sliding_window
+try:
+    from integral_image import compute_integral_image
+    from haar_features import evaluate_window
+    from sliding_window import sliding_window
+except ImportError:
+    from detection.integral_image import compute_integral_image
+    from detection.haar_features import evaluate_window
+    from detection.sliding_window import sliding_window
 from sklearn.cluster import DBSCAN
 import numpy as np
 import sys

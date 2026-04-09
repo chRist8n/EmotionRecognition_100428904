@@ -111,6 +111,12 @@ try:
             bottom = np.max(skin_coords[:, 0])
             left = np.min(skin_coords[:, 1])
             right = np.max(skin_coords[:, 1])
+        else:
+            # fallback - keep original crop
+            top = 0
+            bottom = face_crop.shape[0]
+            left = 0
+            right = face_crop.shape[1]
 
         # estimated face region size
         face_h = bottom - top
@@ -118,7 +124,7 @@ try:
 
         # add padding
         pad_y = int(face_h * 0.25)
-        pad_x = int(face_w * 0.25)
+        pad_x = int(face_w * 0.20)
 
         top = max(0, top - pad_y)
         bottom = min(face_crop.shape[0], bottom + pad_y)
@@ -126,12 +132,17 @@ try:
         right = min(face_crop.shape[1], right + pad_x)
 
         # tighter crop inside original face_crop
-        refined_crop = face_crop[top:bottom, left:right]
+        refined_crop = raw_frame[y_orig + top:y_orig + bottom, x_orig + left:x_orig + right]
 
-        if refined_crop.size > 0:
-            face_crop = refined_crop
-        else:
-            continue    # skip frame if something went wrong
+        # if refined_crop.size > 0:
+        #     face_crop = refined_crop
+        # else:
+        #     continue    # skip frame if something went wrong
+
+        #face_crop = cv2.resize(face_crop, (256, 256), interpolation=cv2.INTER_CUBIC)
+        
+
+
 
 
 
