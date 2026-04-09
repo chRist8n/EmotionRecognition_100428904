@@ -48,7 +48,7 @@ def preprocess_image(input, output_path="", size=(256, 256)):
     arr = clahe.apply(arr)
 
     # scale down pixel values from 0-255 to 0-1
-    arr = np.array(img).astype(np.float32) / 255.0
+    arr = arr.astype(np.float32) / 255.0
 
     # output
     if filetype == "str":

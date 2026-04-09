@@ -136,7 +136,7 @@ def get_box_center(box):
 ## NOTE: width=100, height=160 provides a tight crop at >= medium distances but cuts part
 #       of the face off at close range (when leaning forwards). for now it gives a
 #       generous amount of room but the area will be tightened later in the pipeline.
-def build_face_box_from_center(box, image_shape, face_width=130, face_height=200): #center_x, center_y, box_size, image_shape):
+def build_face_box_from_center(box, image_shape, face_width=100, face_height=150): #center_x, center_y, box_size, image_shape):
     # find the centre of detected feature as well as its width and height (for depth estimation)
     center_x, center_y = get_box_center(box)
     x, y, w, h = box
@@ -144,7 +144,7 @@ def build_face_box_from_center(box, image_shape, face_width=130, face_height=200
     # build  a fixed-size box around centre 
     # (and adjust x and y to account for feature sitting at top of head)
     face_x = (center_x - face_width // 2) - 5
-    face_y = (center_y - face_height // 2) + 70
+    face_y = (center_y - face_height // 2) + 60
 
     # keep inside image bounds
     img_h, img_w = image_shape
