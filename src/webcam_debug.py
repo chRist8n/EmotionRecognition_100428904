@@ -5,6 +5,7 @@ has been fedthrough the algorithm(s) for debugging purposes.
     debugging
 -   Quit with [`] key
 """
+import sys
 import preprocess
 import detection.face_detector as detector
 import cv2
@@ -68,7 +69,7 @@ try:
         scale_x = orig_w / proc_w
         scale_y = orig_h / proc_h
 
-        # map detection back to raw_frame
+        #3.1) Map detection back to raw_frame
         x_orig = int(x * scale_x)
         y_orig = int(y * scale_y)
         w_orig = int(w * scale_x)
@@ -80,7 +81,59 @@ try:
         # check crop is valid
         if face_crop.size == 0:
             print("Error: Subject may be too close or out of frame")
-            continue  # skip frame if something went wrong
+            continue    # skip frame if something went wrong
+
+        #3.2) Apply secondary cropping for tighter fit to face
+
+        # YCrCb skin-tone mask
+        ycrcb = cv2.cvtColor(face_crop, cv2.COLOR_BGR2YCrCb)
+        Y, Cr, Cb = cv2.split(ycrcb)
+
+        skin_mask = (
+            (Cr >= 133) & (Cr <= 173) &
+            (Cb >= 77)  & (Cb <= 127)
+        ).astype(np.uint8)
+
+        kernel = np.ones((5, 5), np.uint8)
+        skin_mask = cv2.morphologyEx(skin_mask, cv2.MORPH_OPEN, kernel)
+        skin_mask = cv2.morphologyEx(skin_mask, cv2.MORPH_CLOSE, kernel)
+
+        num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(skin_mask, connectivity=8)
+
+        if num_labels > 1:
+            largest_label = 1 + np.argmax(stats[1:, cv2.CC_STAT_AREA])
+            skin_mask = (labels == largest_label).astype(np.uint8)
+
+        skin_coords = np.column_stack(np.where(skin_mask > 0))
+
+        if len(skin_coords) > 0:
+            top = np.min(skin_coords[:, 0])
+            bottom = np.max(skin_coords[:, 0])
+            left = np.min(skin_coords[:, 1])
+            right = np.max(skin_coords[:, 1])
+
+        # estimated face region size
+        face_h = bottom - top
+        face_w = right - left
+
+        # add padding
+        pad_y = int(face_h * 0.25)
+        pad_x = int(face_w * 0.25)
+
+        top = max(0, top - pad_y)
+        bottom = min(face_crop.shape[0], bottom + pad_y)
+        left = max(0, left - pad_x)
+        right = min(face_crop.shape[1], right + pad_x)
+
+        # tighter crop inside original face_crop
+        refined_crop = face_crop[top:bottom, left:right]
+
+        if refined_crop.size > 0:
+            face_crop = refined_crop
+        else:
+            continue    # skip frame if something went wrong
+
+
 
         ## PIPELINE END ##
 
@@ -116,8 +169,9 @@ try:
         if cv2.waitKey(1) & 0xFF == ord('`'):
             break
 except Exception as e:
-    #incase of actual exception, print to console
-    print(f"Debugger - Error: \n, {e}" )
+    #incase of exception, print to console
+    lineno = sys.exc_info()[-1].tb_lineno
+    print(f"Debugger - Error: \n {e} at line {lineno}" )
 finally:
     #always release and destroy everything on close
     cap.release()
