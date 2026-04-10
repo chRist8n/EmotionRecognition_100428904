@@ -176,7 +176,7 @@ def build_face_box_from_detection(box, image_shape):
 
     # --- Step 3: position box relative to eyes ---
     face_x = center_x - face_width // 2
-    face_y = eye_y - int(0.35 * face_height)  # vertical offset
+    face_y = eye_y - int(0.15 * face_height)  # vertical offset
 
     # --- Step 4: clamp to image ---
     face_x = max(0, face_x)
