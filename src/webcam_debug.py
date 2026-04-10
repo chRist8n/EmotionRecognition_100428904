@@ -83,61 +83,110 @@ try:
             print("Error: Subject may be too close or out of frame")
             continue    # skip frame if something went wrong
 
-        #3.2) Apply secondary cropping for tighter fit to face
+
+        ####***********************************************************####
+        #3.2) Apply secondary cropping for tighter fit to face:
 
         # YCrCb skin-tone mask
         ycrcb = cv2.cvtColor(face_crop, cv2.COLOR_BGR2YCrCb)
         Y, Cr, Cb = cv2.split(ycrcb)
 
         skin_mask = (
-            (Cr >= 133) & (Cr <= 173) &
-            (Cb >= 77)  & (Cb <= 127)
+            (Cr >= 125) & (Cr <= 180) &
+            (Cb >= 70)  & (Cb <= 140) &
+            (Y > 50)
         ).astype(np.uint8)
 
         kernel = np.ones((5, 5), np.uint8)
         skin_mask = cv2.morphologyEx(skin_mask, cv2.MORPH_OPEN, kernel)
         skin_mask = cv2.morphologyEx(skin_mask, cv2.MORPH_CLOSE, kernel)
 
+        # find connected components
         num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(skin_mask, connectivity=8)
 
-        if num_labels > 1:
-            largest_label = 1 + np.argmax(stats[1:, cv2.CC_STAT_AREA])
-            skin_mask = (labels == largest_label).astype(np.uint8)
+        best_label = None
+        best_score = -1
 
-        skin_coords = np.column_stack(np.where(skin_mask > 0))
+        for i in range(1, num_labels):
+            x_i = stats[i, cv2.CC_STAT_LEFT]
+            y_i = stats[i, cv2.CC_STAT_TOP]
+            w_i = stats[i, cv2.CC_STAT_WIDTH]
+            h_i = stats[i, cv2.CC_STAT_HEIGHT]
+            area = stats[i, cv2.CC_STAT_AREA]
 
-        if len(skin_coords) > 0:
-            top = np.min(skin_coords[:, 0])
-            bottom = np.max(skin_coords[:, 0])
-            left = np.min(skin_coords[:, 1])
-            right = np.max(skin_coords[:, 1])
+            if area < 500:
+                continue
+
+            aspect_ratio = h_i / (w_i + 1e-5)
+            if not (0.8 < aspect_ratio < 1.8):
+                continue
+
+            center_x = x_i + w_i // 2
+            dist_from_center = abs(center_x - face_crop.shape[1] // 2)
+
+            score = area - (dist_from_center * 2)
+
+            if score > best_score:
+                best_score = score
+                best_label = i
+
+        # extract bounding box
+        if best_label is not None:
+            x_i = stats[best_label, cv2.CC_STAT_LEFT]
+            y_i = stats[best_label, cv2.CC_STAT_TOP]
+            w_i = stats[best_label, cv2.CC_STAT_WIDTH]
+            h_i = stats[best_label, cv2.CC_STAT_HEIGHT]
+
+            top = y_i
+            bottom = y_i + h_i
+            left = x_i
+            right = x_i + w_i
         else:
-            # fallback - keep original crop
             top = 0
             bottom = face_crop.shape[0]
             left = 0
             right = face_crop.shape[1]
 
-        # estimated face region size
-        face_h = bottom - top
-        face_w = right - left
+        # --- controlled padding --- #
+        h = bottom - top
+        w = right - left
 
-        # add padding
-        pad_y = int(face_h * 0.25)
-        pad_x = int(face_w * 0.20)
+        pad_y_top = int(h * 0.20)     # more space above (hair/forehead)
+        pad_y_bottom = int(h * 0.30)  # more space below (chin)
+        pad_x = int(w * 0.20)
 
-        top = max(0, top - pad_y)
-        bottom = min(face_crop.shape[0], bottom + pad_y)
+        top = max(0, top - pad_y_top)
+        bottom = min(face_crop.shape[0], bottom + pad_y_bottom)
         left = max(0, left - pad_x)
         right = min(face_crop.shape[1], right + pad_x)
 
-        # tighter crop inside original face_crop
-        refined_crop = raw_frame[y_orig + top:y_orig + bottom, x_orig + left:x_orig + right]
+        # --- square crop (centered) --- #
+        h = bottom - top
+        w = right - left
+        size = max(h, w)
 
-        # if refined_crop.size > 0:
-        #     face_crop = refined_crop
-        # else:
-        #     continue    # skip frame if something went wrong
+        center_y = (top + bottom) // 2
+        center_x = (left + right) // 2
+
+        top = max(0, center_y - size // 2)
+        bottom = min(face_crop.shape[0], top + size)
+
+        left = max(0, center_x - size // 2)
+        right = min(face_crop.shape[1], left + size)
+
+        # --- final crop from raw frame --- #
+        refined_crop = raw_frame[
+            y_orig + top:y_orig + bottom,
+            x_orig + left:x_orig + right
+        ]
+
+        if refined_crop.size > 0:
+            face_crop = refined_crop
+        else:
+            continue
+
+        ####***********************************************************####
+        
 
         #face_crop = cv2.resize(face_crop, (256, 256), interpolation=cv2.INTER_CUBIC)
         
