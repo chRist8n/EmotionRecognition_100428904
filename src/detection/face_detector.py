@@ -186,6 +186,29 @@ def build_face_box_from_detection(box, image_shape):
 
     return (face_x, face_y, face_width, face_height)
 
+## Helper for above function - applies smoothing 
+prev_box = None
+
+def smooth_box(current_box, alpha=0.05):
+    global prev_box
+
+    if prev_box is None:
+        prev_box = current_box
+        return current_box
+
+    x, y, w, h = current_box
+    px, py, pw, ph = prev_box
+
+    smoothed = (
+        int(alpha * x + (1 - alpha) * px),
+        int(alpha * y + (1 - alpha) * py),
+        int(alpha * w + (1 - alpha) * pw),
+        int(alpha * h + (1 - alpha) * ph),
+    )
+
+    prev_box = smoothed
+    return smoothed
+
 #DETECT FACES
 def detect_faces(image, scales=[32, 48, 64, 96], step=12, threshold=0.9):
     #approximate normalisation for contrast
@@ -228,8 +251,10 @@ def detect_faces(image, scales=[32, 48, 64, 96], step=12, threshold=0.9):
     best_box = verify_detections(norm_image, detections)
     if best_box is None:
         return None
+    
     # final_pred = build_face_box_from_center(best_box, image.shape)
     final_pred = build_face_box_from_detection(best_box, image.shape)
+    final_pred = smooth_box(final_pred)
 
     return final_pred
 
