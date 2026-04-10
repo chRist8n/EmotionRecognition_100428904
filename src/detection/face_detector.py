@@ -162,23 +162,35 @@ def build_face_box_from_center(box, image_shape, face_width=100, face_height=150
 
 ## Dynamically-sized box
 #   All magic numbers are labelled with comments - adjust to fine-tune
-def build_face_box_from_detection(box, image_shape):
+def build_face_box_from_detection(box, image_shape, prev_box=None):
     x, y, w, h = box
     img_h, img_w = image_shape
 
-    # --- Step 1: estimate eye line (anchor) ---
+    # --- Step 1: estimate eye line (anchor) --- #
     eye_y = y + int(0.4 * h)   # relative position of eyes
     center_x = x + w // 2
 
-    # --- Step 2: estimate face size from width (more stable than height) ---
-    face_width = int(2.2 * w)       # "zoom" strength
-    face_height = int(2.8 * w)      # relative box height
+    # --- Step 2: estimate face size --- #
+    face_width = int(2.2 * w)
+    face_height = int(2.8 * w)
 
-    # --- Step 3: position box relative to eyes ---
+    if prev_box is not None:
+        _, _, prev_w, prev_h = prev_box
+        growing = face_width > prev_w
+    else:
+        growing = False
+
+    # shift more downward if growing
+    if growing:
+        vertical_bias = -0.25   # adjust box down
+    else:
+        vertical_bias = 0.0    # normal
+
+    # --- Step 3: position box relative to eyes --- #
     face_x = center_x - face_width // 2
-    face_y = eye_y - int(0.15 * face_height)  # vertical offset
+    face_y = eye_y - int(vertical_bias * face_height)
 
-    # --- Step 4: clamp to image ---
+    # --- Step 4: clamp to image --- #
     face_x = max(0, face_x)
     face_y = max(0, face_y)
     face_width = min(face_width, img_w - face_x)
@@ -187,9 +199,11 @@ def build_face_box_from_detection(box, image_shape):
     return (face_x, face_y, face_width, face_height)
 
 ## Helper for above function - applies smoothing 
+#   pos_alpha provides lots of positional smoothing
+#   size_alpha allows for minimal but helpful smoothing to size (needs way less but does help)
 prev_box = None
 
-def smooth_box(current_box, alpha=0.05):
+def smooth_box(current_box, pos_alpha=0.75, size_alpha=0.15):
     global prev_box
 
     if prev_box is None:
@@ -200,10 +214,10 @@ def smooth_box(current_box, alpha=0.05):
     px, py, pw, ph = prev_box
 
     smoothed = (
-        int(alpha * x + (1 - alpha) * px),
-        int(alpha * y + (1 - alpha) * py),
-        int(alpha * w + (1 - alpha) * pw),
-        int(alpha * h + (1 - alpha) * ph),
+        int(pos_alpha * x + (1 - pos_alpha) * px),
+        int(pos_alpha * y + (1 - pos_alpha) * py),
+        int(size_alpha * w + (1 - size_alpha) * pw),
+        int(size_alpha * h + (1 - size_alpha) * ph),
     )
 
     prev_box = smoothed
@@ -253,7 +267,7 @@ def detect_faces(image, scales=[32, 48, 64, 96], step=12, threshold=0.9):
         return None
     
     # final_pred = build_face_box_from_center(best_box, image.shape)
-    final_pred = build_face_box_from_detection(best_box, image.shape)
+    final_pred = build_face_box_from_detection(best_box, image.shape, prev_box)
     final_pred = smooth_box(final_pred)
 
     return final_pred
