@@ -161,24 +161,30 @@ def build_face_box_from_center(box, image_shape, face_width=100, face_height=150
     return (face_x, face_y, face_width, face_height)
 
 ## Dynamically-sized box
+#   All magic numbers are labelled with comments - adjust to fine-tune
 def build_face_box_from_detection(box, image_shape):
     x, y, w, h = box
-
-    # Expand box (tuned ratios, not constants)
-    new_x = x - int(0.2 * w)
-    new_y = y - int(0.3 * h)
-
-    new_w = int(1.4 * w)
-    new_h = int(1.8 * h)  # extend downward more for chin
-
-    # Clamp to image bounds
     img_h, img_w = image_shape
-    new_x = max(0, new_x)
-    new_y = max(0, new_y)
-    new_w = min(new_w, img_w - new_x)
-    new_h = min(new_h, img_h - new_y)
 
-    return (new_x, new_y, new_w, new_h)
+    # --- Step 1: estimate eye line (anchor) ---
+    eye_y = y + int(0.4 * h)   # relative position of eyes
+    center_x = x + w // 2
+
+    # --- Step 2: estimate face size from width (more stable than height) ---
+    face_width = int(2.2 * w)       # "zoom" strength
+    face_height = int(2.8 * w)      # relative box height
+
+    # --- Step 3: position box relative to eyes ---
+    face_x = center_x - face_width // 2
+    face_y = eye_y - int(0.35 * face_height)  # vertical offset
+
+    # --- Step 4: clamp to image ---
+    face_x = max(0, face_x)
+    face_y = max(0, face_y)
+    face_width = min(face_width, img_w - face_x)
+    face_height = min(face_height, img_h - face_y)
+
+    return (face_x, face_y, face_width, face_height)
 
 #DETECT FACES
 def detect_faces(image, scales=[32, 48, 64, 96], step=12, threshold=0.9):
