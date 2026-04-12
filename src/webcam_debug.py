@@ -9,6 +9,7 @@ import sys
 import os
 import preprocess
 import detection.face_detector as detector
+import landmarking.landmark_detector as landmarker
 import cv2
 import importlib
 import numpy as np
@@ -63,7 +64,7 @@ try:
         else:
             continue # if nothing is detected, move on to next frame
 
-        #2.2) Crop to new work area (= detection)
+        #2.2) Crop to new work area (== detection)
         orig_h, orig_w = raw_frame.shape[:2]
         proc_h, proc_w = frame.shape[:2]
 
@@ -89,21 +90,26 @@ try:
         #face_crop = cv2.resize(face_crop, (256, 256), interpolation=cv2.INTER_CUBIC)
         
 
+        #4) Find facial landmarks
 
+        # normalise face_crop
+        crop_norm = preprocess.preprocess_image(face_crop)
+        # test for debugging contour finding:
+        contours, contours_drawn = landmarker.detect_landmarks(crop_norm)
 
 
 
         ## PIPELINE END ##
-
-
 
         ####################################################################
 
         ## OUTPUT: ##
 
         
-        cv2.imshow("Webcam Debug", face_crop)
-        
+        # cv2.imshow("Webcam Debug", face_crop)
+        cv2.imshow("Webcam Debug", contours_drawn)
+
+
 
         # # initialise full frame for display and highlight ROI
         # display_frame = (frame * 255).astype("uint8")
