@@ -14,21 +14,7 @@ def find_contours(input):
 
     return contours
 
-    
-
-
-def detect_landmarks(input_raw):
-
-    # parse to uint8 for cv2 functions
-    if input_raw.dtype != 'uint8':
-        input_raw = (input_raw * 255).astype('uint8')
-
-    # apply Gaussian blur
-    input = cv2.GaussianBlur(input_raw, (3,3), 0)
-
-    # find contours
-    raw_contours = find_contours(input)
-
+def filter_contours(input, raw_contours):
     # filter out noise
     contours = []
     w, h = input.shape
@@ -49,6 +35,24 @@ def detect_landmarks(input_raw):
         # if filters are passed, add to valid contour list
         contours.append(contour)
 
+    return contours
+
+
+def detect_landmarks(input_raw):
+
+    # parse to uint8 for cv2 functions
+    if input_raw.dtype != 'uint8':
+        input_raw = (input_raw * 255).astype('uint8')
+
+    # apply Gaussian blur
+    input = cv2.GaussianBlur(input_raw, (3,3), 0)
+
+    # find contours
+    raw_contours = find_contours(input)
+
+    # clean contours
+    contours = filter_contours(input, raw_contours)
+
 
 
     ##*********************************************************##
@@ -59,8 +63,6 @@ def detect_landmarks(input_raw):
     cv2.drawContours(output, contours, -1, (0,255,0), 2)
     #cv2.imwrite("data/debugging_images/test_landmarked.jpg", output)
     ##*********************************************************##
-
-
 
     # return contours and debugging image
     return contours, output
