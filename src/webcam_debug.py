@@ -6,6 +6,7 @@ has been fedthrough the algorithm(s) for debugging purposes.
 -   Quit with [`] key
 """
 import sys
+import os
 import preprocess
 import detection.face_detector as detector
 import cv2
@@ -100,10 +101,9 @@ try:
 
         ## OUTPUT: ##
 
-
+        
         cv2.imshow("Webcam Debug", face_crop)
-
-
+        
 
         # # initialise full frame for display and highlight ROI
         # display_frame = (frame * 255).astype("uint8")

@@ -171,6 +171,8 @@ def build_face_box_from_detection(box, image_shape, prev_box=None):
     center_x = x + w // 2
 
     # --- Step 2: estimate face size --- #
+    # face_width = int(6.5 * (w ** 0.8))
+    # face_height = int(8.0 * (w ** 0.8))
     face_width = int(2.2 * w)
     face_height = int(2.8 * w)
 
@@ -193,8 +195,8 @@ def build_face_box_from_detection(box, image_shape, prev_box=None):
     # --- Step 4: clamp to image --- #
     face_x = max(0, face_x)
     face_y = max(0, face_y)
-    face_width = min(face_width, img_w - face_x)
-    face_height = min(face_height, img_h - face_y)
+    face_width = min(int(2.2 * w), img_w)
+    face_height = min(int(2.8 * w), img_h)
 
     return (face_x, face_y, face_width, face_height)
 
@@ -224,7 +226,7 @@ def smooth_box(current_box, pos_alpha=0.75, size_alpha=0.15):
     return smoothed
 
 #DETECT FACES
-def detect_faces(image, scales=[32, 48, 64, 96], step=12, threshold=0.9):
+def detect_faces(image, scales=[32, 48, 64, 96, 128, 160], step=8, threshold=0.9):
     #approximate normalisation for contrast
     image_mean = np.mean(image)
     image_std = np.std(image) if np.std(image) > 0 else 1
