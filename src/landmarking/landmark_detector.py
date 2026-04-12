@@ -24,7 +24,7 @@ def detect_landmarks(input_raw):
         input_raw = (input_raw * 255).astype('uint8')
 
     # apply Gaussian blur
-    input = cv2.GaussianBlur(input_raw, (5,5), 0)
+    input = cv2.GaussianBlur(input_raw, (3,3), 0)
 
     # find contours
     raw_contours = find_contours(input)
