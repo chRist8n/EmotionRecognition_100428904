@@ -9,7 +9,8 @@ def preprocess_image(input, output_path="", size=(256, 256)):
     Recieves an unprocessed image and applies the following:
     - greyscale
     - resize to 256x256
-    - pixel scaling
+    - apply CLAHE
+    - scale pixels to (0-1)
     
     Parameters:
         input (str)/(array) : Filepath for input (MAYBE CHANGE TO INPUT IMAGE DIRECTLY)

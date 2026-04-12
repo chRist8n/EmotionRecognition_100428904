@@ -26,6 +26,7 @@ try:
         if frame_count % 10 == 0:
             importlib.reload(preprocess)
             importlib.reload(detector)
+            importlib.reload(landmarker)
 
         #capture frame
         ret, raw_frame = cap.read() 
@@ -94,6 +95,8 @@ try:
 
         # normalise face_crop
         crop_norm = preprocess.preprocess_image(face_crop)
+        #crop_norm = cv2.cvtColor(face_crop, cv2.COLOR_BGR2GRAY)
+
         # test for debugging contour finding:
         contours, contours_drawn = landmarker.detect_landmarks(crop_norm)
 
