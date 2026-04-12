@@ -75,4 +75,5 @@ if __name__ == "__main__":
 
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))  # ensure root is in path
     import webcam_debug  # run webcam_debug.py
+    webcam_debug
     sys.exit()
