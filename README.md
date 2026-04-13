@@ -11,9 +11,11 @@ NOTE: whilst this project remains in development, each stage will be marked with
                                     -   recieve frame from zoom []
                                     1)  apply preprocessing [X]
                                     2)  find face and create bounding box [X]
-                                    3)  crop raw frame to bounding box []
+                                    3)  crop raw frame to bounding box [X]
                                         -   reapply preprocessing to cropped version of raw frame
                                     4)  find facial landmarks []
+                                        -   if any landmarks appear to be missing, 
+                                        return back up the stack with this feedback  and try again
                                     5)  align and normalise []
                                     6)  classify []
                                     -   output []

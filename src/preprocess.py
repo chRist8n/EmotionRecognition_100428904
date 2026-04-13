@@ -1,69 +1,50 @@
-from PIL import Image
 import sys
 import os
-import numpy as np
 import cv2
 
-def preprocess_image(input, output_path="", size=(256, 256)):
+def preprocess_image(input, size=(256, 256)):
     """
-    Recieves an unprocessed image and applies the following:
+    Receives an image and applies the following:
     - greyscale
     - resize to 256x256
     - apply CLAHE
-    - scale pixels to (0-1)
+    - apply Gaussian blur
     
     Parameters:
-        input (str)/(array) : Filepath for input (MAYBE CHANGE TO INPUT IMAGE DIRECTLY)
-        output_path (str)/(array) : Filepath to save the result to
+        input (str)/(array) : Filepath for input (str) / image (array)
         size (tuple:int) : Size to resize image to
-    ((Note that the input can either be a filepath or a numpy 
-    array but the output will be of the same type as the input))
+
+    Note: The input can either be a filepath or a numpy 
+    array but the output will be returned as an image (array)
 
     Returns:
-        (str) : Filepath for output
-                    or
         (array) : Image as numpy array
     """
 
-    # load image
+    # load image in greyscale
     if isinstance(input, str):
         # str means filepath
-        filetype = "str"
-        img = Image.open(input)
+        img = cv2.imread(input, cv2.IMREAD_GRAYSCALE)
     else:
         # image parsed directly
-        filetype = "arr"
-        img = Image.fromarray(input)
-
-    # convert to greyscale
-    img = img.convert("L")
+        img = cv2.cvtColor(input, cv2.COLOR_BGR2GRAY)
 
     # resize
-    img = img.resize(size)
-
-    # to numpy array
-    arr = np.array(img).astype(np.uint8)
+    img = cv2.resize(img, size)
 
     # CLAHE
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    arr = clahe.apply(arr)
+    clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(8, 8))
+    img = clahe.apply(img)
 
-    # scale down pixel values from 0-255 to 0-1
-    arr = arr.astype(np.float32) / 255.0
+    # Add Gaussian blur to soften noise
+    img = cv2.GaussianBlur(img, (3,3), 0)
+
+
+    # # save for debugging
+    # cv2.imwrite("data/debugging_images/preprocessed.jpg", img)
 
     # output
-    if filetype == "str":
-        # save array to output_path
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        np.save(output_path.replace(".jpg", ".npy"), arr)
-    else:
-        #(save as jpg for debugging)
-        #{
-        os.makedirs(os.path.dirname("data/debugging_images/test_normalized.jpg"), exist_ok=True)
-        img.save("data/debugging_images/test_normalized.jpg")
-        #}
-        # return array
-        return arr
+    return img
 
 
 if __name__ == "__main__":

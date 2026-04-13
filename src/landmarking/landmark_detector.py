@@ -42,7 +42,8 @@ def detect_landmarks(input_raw):
 
     # parse to uint8 for cv2 functions
     if input_raw.dtype != 'uint8':
-        input_raw = (input_raw * 255).astype('uint8')
+        input_raw = (input_raw).astype('uint8')
+
 
     # apply Gaussian blur
     input = cv2.GaussianBlur(input_raw, (3,3), 0)
@@ -63,6 +64,11 @@ def detect_landmarks(input_raw):
     cv2.drawContours(output, contours, -1, (0,255,0), 2)
     #cv2.imwrite("data/debugging_images/test_landmarked.jpg", output)
     ##*********************************************************##
+
+    # NOTE: In a later stage, a return value will be added to provide feedback to
+    #       previous stages - if anything needs adjusting in next frame (mouth clipped
+    #       out of bottom of frame - looser crop etc), this will allow for that to 
+    #       happen for a more accurate end result.
 
     # return contours and debugging image
     return contours, output
