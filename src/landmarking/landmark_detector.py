@@ -99,9 +99,9 @@ def symmetry_bonus(a, b):
     b_cx, b_cy = bx + bw/2, by + bh/2
 
     # check for similar y level (should be fairly level)
-    dy = abs(a_cy - b_cy)
+    dy = (abs(a_cy - b_cy))
     # check for horizontal seperation (should not overlap)
-    dx = abs(a_cx - b_cx)
+    dx = (abs(a_cx - b_cx))
 
     # check for size difference (should be roughly the same size)
     size_diff = abs(aw - bw) + abs(ah - bh)
@@ -125,11 +125,11 @@ def score_clusters(clusters, image_shape):
         # area = cw * ch
 
         ##--------------------eye score--------------------##
-        eye_score = 0                           # score higher if:
+        eye_score = 0                               # score higher if:
         
-        eye_score += (1 - norm_y) * 3.0         #  - higher in frame
-        eye_score += (1 - abs(norm_x - 0.5))    #  - closer to centre
-        eye_score += min(aspect, 3.0)           #  - horizontally shaped
+        eye_score += (1 - norm_y) * 2.75             #  - higher in frame
+        eye_score += (1 - abs(norm_x - 0.5)) * 5.0  #  - closer to centre
+        eye_score += min(aspect, 3.0)               #  - horizontally shaped
         ##-------------------------------------------------##
 
         ##-------------------mouth score-------------------##
@@ -180,12 +180,23 @@ def detect_landmarks(face_crop):
     scores = score_clusters(clusters, face_crop.shape)
 
     # select best candidates based on scores:
-    
-    # NOTE: currently, an error can occur if scores, or best mouth/eyes are empty
-    if scores:
-        best_mouth = max(scores, key=lambda c: c["mouth_score"])
-        best_eyes = sorted(scores, key=lambda c: c["eye_score"], reverse=True)[:2]
-    
+    eye_candidates = []
+    mouth_candidates = []
+    for c in scores:
+        eye_candidates.append((c["eye_score"], c))
+        mouth_candidates.append((c["mouth_score"], c))
+
+    if mouth_candidates:
+        best_mouth = max(mouth_candidates)[1]
+    else:
+        best_mouth = None
+
+    if len(eye_candidates) >= 2:
+        best_eyes = [c[1] for c in sorted(eye_candidates, reverse=True)[:2]]
+    elif len(eye_candidates) == 1:
+        best_eyes = [max(eye_candidates)[1]]
+    else:
+        best_eyes = None
 
 
 
