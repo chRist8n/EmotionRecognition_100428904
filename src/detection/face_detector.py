@@ -78,7 +78,7 @@ def cluster_boxes(boxes, eps=10, min_samples=2):
 
     Parameters:
         boxes(array) : list of (x, y, w, h) small candidate boxes
-        eps(float) : maximum distance between points in a cluster
+        eps(int) : maximum distance between points in a cluster
         min_samples(int) : minimum number of boxes to form a cluster
 
     Returns:
@@ -167,7 +167,7 @@ def build_face_box_from_detection(box, image_shape, prev_box=None):
     img_h, img_w = image_shape
 
     # --- Step 1: estimate eye line (anchor) --- #
-    eye_y = y + int(0.4 * h)   # relative position of eyes
+    eye_y = y + int(0.6 * h)   # relative position of eyes
     center_x = x + w // 2
 
     # --- Step 2: estimate face size --- #
@@ -184,9 +184,9 @@ def build_face_box_from_detection(box, image_shape, prev_box=None):
 
     # shift more downward if growing
     if growing:
-        vertical_bias = -0.25   # adjust box down
+        vertical_bias = -0.23   # adjust box down
     else:
-        vertical_bias = 0.0    # normal
+        vertical_bias = 0.15    # normal
 
     # --- Step 3: position box relative to eyes --- #
     face_x = center_x - face_width // 2

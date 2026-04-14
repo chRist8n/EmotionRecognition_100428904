@@ -5,8 +5,8 @@ has been fedthrough the algorithm(s) for debugging purposes.
     debugging
 -   Quit with [`] key
 """
-import sys
-import os
+
+import traceback
 import preprocess
 import detection.face_detector as detector
 import landmarking.landmark_detector as landmarker
@@ -86,9 +86,8 @@ try:
             print("Error: Subject may be too close or out of frame")
             continue    # skip frame if something went wrong
 
-        
-
-        #face_crop = cv2.resize(face_crop, (256, 256), interpolation=cv2.INTER_CUBIC)
+        # ensure size = (256,256)
+        face_crop = cv2.resize(face_crop, (256, 256)) #, interpolation=cv2.INTER_CUBIC)
         
 
         #4) Find facial landmarks
@@ -96,8 +95,8 @@ try:
         # normalise face_crop
         crop_norm = preprocess.preprocess_image(face_crop)
 
-        # test for debugging contour finding:
-        contours, contours_drawn = landmarker.detect_landmarks(crop_norm)
+        # test for debugging landmark detection:
+        landmark_debug = landmarker.detect_landmarks(crop_norm)
 
 
 
@@ -109,7 +108,7 @@ try:
 
         
         # cv2.imshow("Webcam Debug", face_crop)
-        cv2.imshow("Webcam Debug", contours_drawn)
+        cv2.imshow("Webcam Debug", landmark_debug)
 
 
 
@@ -135,8 +134,8 @@ try:
             break
 except Exception as e:
     #incase of exception, print to console
-    lineno = sys.exc_info()[-1].tb_lineno
-    print(f"Debugger - Error: \n {e} at line {lineno}" )
+    print(f"Debugger - Error: {e} \n" )
+    traceback.print_exc()
 finally:
     #always release and destroy everything on close
     cap.release()

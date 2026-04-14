@@ -18,7 +18,7 @@ def preprocess_image(input, size=(256, 256)):
     array but the output will be returned as an image (array)
 
     Returns:
-        (array) : Image as numpy array
+        (array) : Image as numpy uint8 array
     """
 
     # load image in greyscale
@@ -44,7 +44,7 @@ def preprocess_image(input, size=(256, 256)):
     # cv2.imwrite("data/debugging_images/preprocessed.jpg", img)
 
     # output
-    return img
+    return img.astype('uint8')
 
 
 if __name__ == "__main__":
