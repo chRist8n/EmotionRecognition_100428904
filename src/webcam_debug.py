@@ -92,11 +92,20 @@ try:
 
         #4) Find facial landmarks
 
-        # normalise face_crop
-        crop_norm = preprocess.preprocess_image(face_crop)
+        # # normalise face_crop
+        # crop_norm = preprocess.preprocess_image(face_crop)
 
         # test for debugging landmark detection:
-        landmark_debug = landmarker.detect_landmarks(crop_norm)
+        landmarks = landmarker.detect_landmarks(face_crop)
+
+        debug = face_crop.copy()
+
+        if landmarks.face_landmarks:
+            for landmark in landmarks.face_landmarks[0]:
+                x = int(landmark.x * face_crop.shape[1])
+                y = int(landmark.y * face_crop.shape[0])
+
+                cv2.circle(debug, (x, y), 1, (0,255,0), -1)
 
 
 
@@ -108,7 +117,7 @@ try:
 
         
         # cv2.imshow("Webcam Debug", face_crop)
-        cv2.imshow("Webcam Debug", landmark_debug)
+        cv2.imshow("Webcam Debug", debug)
 
 
 

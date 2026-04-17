@@ -123,6 +123,11 @@ def verify_detections(image, detections):
         integral = compute_integral_image(patch)
         feature_score = evaluate_window(integral, 0, 0, w, h)
 
+        # if prev_box is not None:
+        #     px, py, pw, ph = prev_box
+        #     dist = abs(x - px) + abs(y - py)
+        #     feature_score -= dist * 0.05
+        
         if feature_score > best_score:
             best_score = feature_score
             best_box = (x, y, w, h)
@@ -184,7 +189,7 @@ def build_face_box_from_detection(box, image_shape, prev_box=None):
 
     # shift more downward if growing
     if growing:
-        vertical_bias = -0.23   # adjust box down
+        vertical_bias = -0.15   # adjust box down
     else:
         vertical_bias = 0.15    # normal
 
