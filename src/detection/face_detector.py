@@ -72,7 +72,7 @@ def non_max_suppression(boxes, scores, iou_threshold=0.3):
     return boxes[keep].tolist()
 
 # initial paramters - eps=15, min_samples=3
-def cluster_boxes(boxes, eps=10, min_samples=2):
+def cluster_boxes(boxes, eps=15, min_samples=3):
     """
     Clusters small candidate boxes into a larger bounding boxes using Density-based spatial clustering of applications with noise (DBSCAN).
 
@@ -135,35 +135,6 @@ def verify_detections(image, detections):
     return best_box
 
 
-def get_box_center(box):
-    x, y, w, h = box
-
-    center_x = x + w // 2
-    center_y = y + h // 2
-
-    return (center_x, center_y)
-
-## NOTE: width=100, height=160 provides a tight crop at >= medium distances but cuts part
-#       of the face off at close range (when leaning forwards). for now it gives a
-#       generous amount of room but the area will be tightened later in the pipeline.
-def build_face_box_from_center(box, image_shape, face_width=100, face_height=150): #center_x, center_y, box_size, image_shape):
-    # find the centre of detected feature as well as its width and height (for depth estimation)
-    center_x, center_y = get_box_center(box)
-    x, y, w, h = box
-
-    # build  a fixed-size box around centre 
-    # (and adjust x and y to account for feature sitting at top of head)
-    face_x = (center_x - face_width // 2) - 5
-    face_y = (center_y - face_height // 2) + 60
-
-    # keep inside image bounds
-    img_h, img_w = image_shape
-    face_x = max(0, face_x)
-    face_y = max(0, face_y)
-    face_width = min(face_width, img_w - face_x)
-    face_height = min(face_height, img_h - face_y)
-
-    return (face_x, face_y, face_width, face_height)
 
 ## Dynamically-sized box
 #   All magic numbers are labelled with comments - adjust to fine-tune
@@ -176,20 +147,18 @@ def build_face_box_from_detection(box, image_shape, prev_box=None):
     center_x = x + w // 2
 
     # --- Step 2: estimate face size --- #
-    # face_width = int(6.5 * (w ** 0.8))
-    # face_height = int(8.0 * (w ** 0.8))
     face_width = int(2.2 * w)
     face_height = int(2.8 * w)
 
     if prev_box is not None:
         _, _, prev_w, prev_h = prev_box
-        growing = face_width > prev_w
+        growing = face_width > (prev_w * 1.1)
     else:
         growing = False
 
     # shift more downward if growing
     if growing:
-        vertical_bias = -0.15   # adjust box down
+        vertical_bias = -0.25   # adjust box down
     else:
         vertical_bias = 0.15    # normal
 
@@ -219,6 +188,12 @@ def smooth_box(current_box, pos_alpha=0.75, size_alpha=0.15):
 
     x, y, w, h = current_box
     px, py, pw, ph = prev_box
+    
+    # check for sudden jumps
+    dx = abs(x - px)
+    dy = abs(y - py)
+    if dx > 50 or dy > 50:
+        return prev_box   # reject sudden jump
 
     smoothed = (
         int(pos_alpha * x + (1 - pos_alpha) * px),

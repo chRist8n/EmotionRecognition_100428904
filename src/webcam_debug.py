@@ -99,7 +99,6 @@ try:
         landmarks = landmarker.detect_landmarks(face_crop)
 
         debug = face_crop.copy()
-
         if landmarks.face_landmarks:
             for landmark in landmarks.face_landmarks[0]:
                 x = int(landmark.x * face_crop.shape[1])
