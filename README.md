@@ -9,15 +9,14 @@ To achieve the end goal, I have broken the problem down into distinct modular st
 NOTE: whilst this project remains in development, each stage will be marked with a "X" when completed and fully functional
 
                                     -   recieve frame from zoom []
-                                    1)  apply preprocessing [X]
-                                    2)  find face and create bounding box [X]
-                                    3)  crop raw frame to bounding box [X]
-                                        -   reapply preprocessing to cropped version of raw frame
-                                    4)  find facial landmarks []
-                                        -   if any landmarks appear to be missing, 
-                                        return back up the stack with this feedback  and try again
-                                    5)  align and normalise []
-                                    6)  classify []
+                                    1)  detect face and create face mesh []
+                                    2)  validation and quality checks []
+                                        -   fallback to previous frame if needed
+                                    3)  find bounding box for face []
+                                        -   crop raw frame to new ROI
+                                    4)  align and normalise []
+                                    5)  feature extraction []
+                                    6)  classification []
                                     -   output []
 
 ...  IN PROGRESS  ...

@@ -42,12 +42,13 @@ try:
         """
         Steps to be completed in pipeline: (ticked with a [X] if implemented)
             -   recieve frame from zoom []
-            1)  apply preprocessing [X]
-            2)  find face and create bounding box [X]
-            3)  crop raw frame to bounding box []
-                - reapply preprocessing to cropped version of raw frame
-            4)  find facial landmarks []
-            5)  align and normalise []
+            1)  detect face + create face mesh []
+            2)  validation + quality checks []
+                - fallback to previous frame if needed
+            3)  find bounding box for face []
+                - crop raw frame to new ROI
+            4)  align and normalise []
+            5)  feature extraction []
             6)  classify []
             -   output []
 
@@ -87,7 +88,7 @@ try:
             continue    # skip frame if something went wrong
 
         # ensure size = (256,256)
-        face_crop = cv2.resize(face_crop, (256, 256)) #, interpolation=cv2.INTER_CUBIC)
+        face_crop = cv2.resize(face_crop, (256, 256))
         
 
         #4) Find facial landmarks
