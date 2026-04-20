@@ -6,17 +6,36 @@ has been fedthrough the algorithm(s) for debugging purposes.
 -   Quit with [`] key
 """
 
+import os
 import traceback
-import preprocess
-import detection.face_detector as detector
-import landmarking.landmark_detector as landmarker
+#import preprocess
+#import detection.face_detector as detector
+import landmarking.landmark_detector as landmarking
 import cv2
 import importlib
 import numpy as np
+import mediapipe as mp
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
+
+BaseOptions = python.BaseOptions
+FaceLandmarker = vision.FaceLandmarker
+FaceLandmarkerOptions = vision.FaceLandmarkerOptions
+VisionRunningMode = vision.RunningMode
+
+model_path = os.path.join(os.path.dirname(__file__), "models", "face_landmarker.task")
+
+options = FaceLandmarkerOptions(
+    base_options=BaseOptions(model_asset_path=model_path),
+    running_mode=VisionRunningMode.IMAGE,
+    num_faces=1
+)
+
+landmarker = FaceLandmarker.create_from_options(options)
 
 
 # open webcam (0 = default camera)
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 try:
     frame_count = 0
@@ -24,9 +43,7 @@ try:
         #reload all imported files from this project every 10 frames
         frame_count += 1
         if frame_count % 10 == 0:
-            importlib.reload(preprocess)
-            importlib.reload(detector)
-            importlib.reload(landmarker)
+            importlib.reload(landmarking)
 
         #capture frame
         ret, raw_frame = cap.read() 
@@ -56,56 +73,30 @@ try:
         is outputted (at any given stage) in a cv2.imshow() window.
         """
 
-        #1) Preprocess
-        frame = preprocess.preprocess_image(raw_frame)
 
-        #2.1) Detect face
-        detection = detector.detect_faces(frame)
-        if detection is not None:
-            x, y, w, h = detection
+
+        # 1) detect face + create face mesh
+
+        landmarks = landmarking.detect_landmarks(raw_frame, landmarker)
+
+
+        # 2) validation + quality checks
+
+        feedback = landmarking.validate_landmarks(raw_frame, landmarks)
+        if not feedback["valid"]:
+            #fallback/ skip frame
+            continue
+            #    NOTE: if frequent invalid detects becomes 
+            #    a problem, handle here
         else:
-            continue # if nothing is detected, move on to next frame
+            points = feedback["points"]
+            area_ratio = feedback["area_ratio"]
 
-        #2.2) Crop to new work area (== detection)
-        orig_h, orig_w = raw_frame.shape[:2]
-        proc_h, proc_w = frame.shape[:2]
 
-        scale_x = orig_w / proc_w
-        scale_y = orig_h / proc_h
+        # 3) find bounding box for face
 
-        #3.1) Map detection back to raw_frame
-        x_orig = int(x * scale_x)
-        y_orig = int(y * scale_y)
-        w_orig = int(w * scale_x)
-        h_orig = int(h * scale_y)
-
-        # crop raw frame using scaled coordinates
-        face_crop = raw_frame[y_orig:y_orig+h_orig, x_orig:x_orig+w_orig]
-
-        # check crop is valid
-        if face_crop.size == 0:
-            print("Error: Subject may be too close or out of frame")
-            continue    # skip frame if something went wrong
-
-        # ensure size = (256,256)
-        face_crop = cv2.resize(face_crop, (256, 256))
+        bounding_box = landmarking.build_face_box(raw_frame, points)
         
-
-        #4) Find facial landmarks
-
-        # # normalise face_crop
-        # crop_norm = preprocess.preprocess_image(face_crop)
-
-        # test for debugging landmark detection:
-        landmarks = landmarker.detect_landmarks(face_crop)
-
-        debug = face_crop.copy()
-        if landmarks.face_landmarks:
-            for landmark in landmarks.face_landmarks[0]:
-                x = int(landmark.x * face_crop.shape[1])
-                y = int(landmark.y * face_crop.shape[0])
-
-                cv2.circle(debug, (x, y), 1, (0,255,0), -1)
 
 
 
@@ -116,7 +107,14 @@ try:
         ## OUTPUT: ##
 
         
-        # cv2.imshow("Webcam Debug", face_crop)
+        debug = raw_frame.copy()
+        if landmarks.face_landmarks:
+            for landmark in landmarks.face_landmarks[0]:
+                x = int(landmark.x * raw_frame.shape[1])
+                y = int(landmark.y * raw_frame.shape[0])
+
+                cv2.circle(debug, (x, y), 1, (0,255,0), -1)
+
         cv2.imshow("Webcam Debug", debug)
 
 
