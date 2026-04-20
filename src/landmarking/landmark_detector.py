@@ -32,8 +32,8 @@ def build_face_box(frame, points):
     face_h = y_max - y_min
 
     #allow a small margin
-    margin_x = int(face_w * 0.25)
-    margin_y = int(face_h * 0.35)
+    margin_x = int(face_w * 0.15)
+    margin_y = int(face_h * 0.15)
 
     #define a bounding box
     x = x_min - margin_x
@@ -93,11 +93,11 @@ def validate_landmarks(frame, landmarks):
         "area_ratio": area_ratio
     }
 
-def detect_landmarks(face_crop, landmarker):
+def detect_landmarks(frame, landmarker):
 
     mp_image = mp.Image(
         image_format=mp.ImageFormat.SRGB,
-        data=face_crop
+        data=frame
     )
 
     result = landmarker.detect(mp_image)

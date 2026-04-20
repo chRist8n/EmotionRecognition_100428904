@@ -96,8 +96,11 @@ try:
         # 3) find bounding box for face
 
         bounding_box = landmarking.build_face_box(raw_frame, points)
-        
+        x, y, w, h = bounding_box
+        face_crop = raw_frame[y:y+h, x:x+w]
 
+        # 4) align + normalise
+        
 
 
         ## PIPELINE END ##
@@ -106,14 +109,18 @@ try:
 
         ## OUTPUT: ##
 
-        
+        #draw face mesh landmarks
         debug = raw_frame.copy()
         if landmarks.face_landmarks:
             for landmark in landmarks.face_landmarks[0]:
-                x = int(landmark.x * raw_frame.shape[1])
-                y = int(landmark.y * raw_frame.shape[0])
+                x = int(landmark.x * debug.shape[1])
+                y = int(landmark.y * debug.shape[0])
 
                 cv2.circle(debug, (x, y), 1, (0,255,0), -1)
+
+        # #highlight bounding box
+        # x, y, w, h = bounding_box
+        # cv2.rectangle(debug, (x, y), (x + w, y + h), (0,0,255), 1)
 
         cv2.imshow("Webcam Debug", debug)
 
