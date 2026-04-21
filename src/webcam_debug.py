@@ -96,11 +96,30 @@ try:
         # 3) find bounding box for face
 
         bounding_box = landmarking.build_face_box(raw_frame, points)
-        x, y, w, h = bounding_box
-        face_crop = raw_frame[y:y+h, x:x+w]
+        bx, by, bw, bh = bounding_box
+
+        #crop image to face
+        face_crop = raw_frame[by:by+bh, bx:bx+bw]
+
+        #match landmarks to new size/aspect ratio
+        points_cropped = [(px - bx, py - by) for (px, py) in points]
+
 
         # 4) align + normalise
-        
+
+        #normalise points to (0-1)
+        norm_points = [(x / bw, y / bh) for (x, y) in points_cropped]
+
+        #clamp normalised points
+        norm_points = [
+            (min(max(x, 0.0), 0.1), min(max(y, 0.0), 1.0))
+            for (x, y) in norm_points
+        ]
+
+
+        #points_crop = [((lm.x * raw_frame[1] - bx) / bw, (lm.y * raw_frame[0]) / bh) for lm in points]
+        ### ^ needs fixing
+
 
 
         ## PIPELINE END ##
@@ -110,13 +129,17 @@ try:
         ## OUTPUT: ##
 
         #draw face mesh landmarks
-        debug = raw_frame.copy()
-        if landmarks.face_landmarks:
-            for landmark in landmarks.face_landmarks[0]:
-                x = int(landmark.x * debug.shape[1])
-                y = int(landmark.y * debug.shape[0])
+        debug = face_crop.copy()
+        # if landmarks.face_landmarks:
+        #     for landmark in landmarks.face_landmarks[0]:
+        #         x = int(landmark.x * debug.shape[1])
+        #         y = int(landmark.y * debug.shape[0])
 
-                cv2.circle(debug, (x, y), 1, (0,255,0), -1)
+        #         cv2.circle(debug, (x, y), 1, (0,255,0), -1)
+
+        if points_cropped:
+            for (x, y) in points_cropped:
+                cv2.circle(debug, (int(x), int(y)), 2, (0,255,0), -1)
 
         # #highlight bounding box
         # x, y, w, h = bounding_box
