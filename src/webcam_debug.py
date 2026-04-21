@@ -11,6 +11,8 @@ import traceback
 #import preprocess
 #import detection.face_detector as detector
 import landmarking.landmark_detector as landmarking
+import landmarking.cropping as cropping
+import landmarking.smoothing as smoothing
 import cv2
 import importlib
 import numpy as np
@@ -34,6 +36,9 @@ options = FaceLandmarkerOptions(
 landmarker = FaceLandmarker.create_from_options(options)
 
 
+prev_feedback = None
+
+
 # open webcam (0 = default camera)
 cap = cv2.VideoCapture(1)
 
@@ -44,6 +49,8 @@ try:
         frame_count += 1
         if frame_count % 10 == 0:
             importlib.reload(landmarking)
+            importlib.reload(cropping)
+            importlib.reload(smoothing)
 
         #capture frame
         ret, raw_frame = cap.read() 
@@ -62,6 +69,7 @@ try:
             1)  detect face + create face mesh []
             2)  validation + quality checks []
                 - fallback to previous frame if needed
+                - apply smoothing
             3)  find bounding box for face []
                 - crop raw frame to new ROI
             4)  align and normalise []
@@ -84,41 +92,72 @@ try:
 
         feedback = landmarking.validate_landmarks(raw_frame, landmarks)
         if not feedback["valid"]:
-            #fallback/ skip frame
-            continue
-            #    NOTE: if frequent invalid detects becomes 
-            #    a problem, handle here
-        else:
-            points = feedback["points"]
-            area_ratio = feedback["area_ratio"]
+            if prev_feedback is not None:
+                #use previous valid landmarks
+                feedback = prev_feedback
+            else:
+                #fallback/ skip frame
+                continue
+        points = feedback["points"]
+        area_ratio = feedback["area_ratio"]
+        prev_feedback = feedback
+
+        #apply smoothing
+        prev_points = prev_feedback["points"]
+        smoothed = smoothing.smooth_landmarks(prev_points, points)
 
 
         # 3) find bounding box for face
 
-        bounding_box = landmarking.build_face_box(raw_frame, points)
-        bx, by, bw, bh = bounding_box
+        bounding_box = cropping.build_face_box(raw_frame, points)# smoothed)
+        bx, by, bw, bh = map(int, bounding_box)
 
         #crop image to face
         face_crop = raw_frame[by:by+bh, bx:bx+bw]
 
-        #match landmarks to new size/aspect ratio
-        points_cropped = [(px - bx, py - by) for (px, py) in points]
-
 
         # 4) align + normalise
 
-        #normalise points to (0-1)
-        norm_points = [(x / bw, y / bh) for (x, y) in points_cropped]
+        #match landmarks to new size/aspect ratio
+        points_cropped = [(px - bx, py - by) for (px, py) in smoothed]
 
-        #clamp normalised points
-        norm_points = [
-            (min(max(x, 0.0), 0.1), min(max(y, 0.0), 1.0))
-            for (x, y) in norm_points
+
+        # 4.1) align
+        #define left/right eye centre
+        LEFT_EYE_CENTRE = cropping.compute_centre(points_cropped, [33, 133, 160, 159])
+        lcx = LEFT_EYE_CENTRE[0]
+        lcy = LEFT_EYE_CENTRE[1]
+        RIGHT_EYE_CENTRE = cropping.compute_centre(points_cropped, [362, 263, 387, 386])
+        rcx = RIGHT_EYE_CENTRE[0]
+        rcy = RIGHT_EYE_CENTRE[1]
+
+        #find angle between eyes
+        dx = rcx - lcx
+        dy = rcy - lcy
+        eye_tilt = np.degrees(np.arctan2(dy, dx))
+
+        #rotate image
+        ROI_centre = (bw // 2, bh // 2)
+        M = cv2.getRotationMatrix2D(ROI_centre, eye_tilt, 1.0)
+        aligned_crop = cv2.warpAffine(face_crop, M, (bw, bh))
+
+        #rotate landmarks
+        aligned_points = []
+        for (x, y) in points_cropped:
+            vec = np.array([x, y, 1.0])
+            rot_x, rot_y = M @ vec
+            aligned_points.append((rot_x, rot_y))
+
+        # 4.2) normalise
+        #normalise aligned points
+        norm_aligned_points = [(x / bw, y / bh) for (x, y) in aligned_points]
+
+        #clamp norm_aligned
+        na_points = [
+            (min(max(x, 0.0), 1.0), min(max(y, 0.0), 1.0))
+            for (x, y) in norm_aligned_points
         ]
 
-
-        #points_crop = [((lm.x * raw_frame[1] - bx) / bw, (lm.y * raw_frame[0]) / bh) for lm in points]
-        ### ^ needs fixing
 
 
 
@@ -129,42 +168,36 @@ try:
         ## OUTPUT: ##
 
         #draw face mesh landmarks
-        debug = face_crop.copy()
-        # if landmarks.face_landmarks:
-        #     for landmark in landmarks.face_landmarks[0]:
-        #         x = int(landmark.x * debug.shape[1])
-        #         y = int(landmark.y * debug.shape[0])
+        debug = aligned_crop.copy()
+        h, w = debug.shape[:2]      #points need to be resized from (0-1) to debug.shape
 
-        #         cv2.circle(debug, (x, y), 1, (0,255,0), -1)
+        if na_points:
+            for (x, y) in na_points:
+                cv2.circle(debug, (int(x * w), int(y * h)), 2, (0,255,0), -1)
 
-        if points_cropped:
-            for (x, y) in points_cropped:
-                cv2.circle(debug, (int(x), int(y)), 2, (0,255,0), -1)
+        #draw eye centre points
+        LEFT_EYE_CENTRE = cropping.compute_centre(na_points, [33, 133, 160, 159])
+        RIGHT_EYE_CENTRE = cropping.compute_centre(na_points, [362, 263, 387, 386])
 
-        # #highlight bounding box
-        # x, y, w, h = bounding_box
-        # cv2.rectangle(debug, (x, y), (x + w, y + h), (0,0,255), 1)
+        le_x = int(LEFT_EYE_CENTRE[0] * w)
+        le_y = int(LEFT_EYE_CENTRE[1] * h)
+        re_x = int(RIGHT_EYE_CENTRE[0] * w)
+        re_y = int(RIGHT_EYE_CENTRE[1] * h)
+
+        cv2.circle(debug, (le_x, le_y), 4, (0,0,255), -1)
+        cv2.circle(debug, (re_x, re_y), 4, (0,0,255), -1)
+
+        #draw line between eye centres
+        cv2.line(debug, (le_x, le_y), (re_x, re_y), (0, 255, 255), 1)
+
 
         cv2.imshow("Webcam Debug", debug)
-
-
-
-        # # initialise full frame for display and highlight ROI
-        # display_frame = (frame * 255).astype("uint8")
-        # cv2.rectangle(display_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        # # initialise cropped view for display
-        # display_crop = (face_crop * 255).astype("uint8")
-
-        # # combine and output
-        # combined = cv2.hconcat([display_frame, display_crop])
-        # cv2.imshow("Webcam Debug", combined)
-        
 
         ## OUTPUT END ##
 
         ####################################################################
 
-        ## EXIT CONDITIONS:
+        ## EXIT CONDITIONS + ERROR HANDLING:
 
         #exit with [`] key
         if cv2.waitKey(1) & 0xFF == ord('`'):
