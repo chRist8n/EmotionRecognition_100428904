@@ -10,7 +10,7 @@ def smooth_landmarks(prev, current, alpha=0.25):
         for (px, py), (cx, cy) in zip(prev, current)
     ]
 
-def smooth_box(prev, current, pos_alpha=0.3, size_alpha=0.5):
+def smooth_box(prev, current, pos_alpha=0.5, size_alpha=0.5):
     if prev is None:
         return current
     

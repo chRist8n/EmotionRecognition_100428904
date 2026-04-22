@@ -8,17 +8,21 @@ has been fedthrough the algorithm(s) for debugging purposes.
 
 import os
 import traceback
-#import preprocess
-#import detection.face_detector as detector
-import landmarking.landmark_detector as landmarking
-import landmarking.cropping as cropping
-import landmarking.smoothing as smoothing
 import cv2
 import importlib
 import numpy as np
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+
+#import preprocess
+#import detection.face_detector as detector
+import landmarking.landmark_detector as landmarking
+import landmarking.cropping as cropping
+import landmarking.smoothing as smoothing
+import landmarking.feature_extraction as feature_extraction
+
+
 
 BaseOptions = python.BaseOptions
 FaceLandmarker = vision.FaceLandmarker
@@ -53,6 +57,7 @@ try:
             importlib.reload(landmarking)
             importlib.reload(cropping)
             importlib.reload(smoothing)
+            importlib.reload(feature_extraction)
 
         #capture frame
         ret, raw_frame = cap.read() 
@@ -169,9 +174,14 @@ try:
 
         # 5) feature extraction
 
-        
+        # # key features
+        # LEFT_EYE = [33, 133, 159, 145]
+        # RIGHT_EYE = [362, 263, 386, 374]
+        # MOUTH = [13, 14, 78, 308]
+        # LEFT_BROW = [70, 63]
+        # RIGHT_BROW = [300, 293]
 
-
+        features = feature_extraction.extract_features(na_points)
 
 
 
@@ -201,8 +211,24 @@ try:
         cv2.circle(debug, (le_x, le_y), 4, (0,0,255), -1)
         cv2.circle(debug, (re_x, re_y), 4, (0,0,255), -1)
 
-        #draw line between eye centres
-        cv2.line(debug, (le_x, le_y), (re_x, re_y), (0, 255, 255), 1)
+        # #draw line between eye centres
+        # cv2.line(debug, (le_x, le_y), (re_x, re_y), (0, 255, 255), 1)
+
+        #print features to screen
+        y0 = 20
+
+        for i, f in enumerate(features):
+            text = f"F{i}: {f:.3f}"
+            cv2.putText(
+                debug,
+                text,
+                (10, y0 + i * 20),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (0, 0, 0),
+                1,
+                cv2.LINE_AA
+            )
 
 
         cv2.imshow("Webcam Debug", debug)
