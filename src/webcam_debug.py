@@ -37,6 +37,8 @@ landmarker = FaceLandmarker.create_from_options(options)
 
 
 prev_feedback = None
+prev_smooth_landmarks = None
+prev_smooth_box = None
 
 
 # open webcam (0 = default camera)
@@ -102,15 +104,21 @@ try:
         area_ratio = feedback["area_ratio"]
         prev_feedback = feedback
 
-        #apply smoothing
-        prev_points = prev_feedback["points"]
-        smoothed = smoothing.smooth_landmarks(prev_points, points)
+        # #apply smoothing
+        # points = smoothing.smooth_landmarks(prev_smooth_landmarks, points)
+        # prev_smooth_landmarks = points
 
 
         # 3) find bounding box for face
 
-        bounding_box = cropping.build_face_box(raw_frame, points)# smoothed)
-        bx, by, bw, bh = map(int, bounding_box)
+        bounding_box = cropping.build_face_box(raw_frame, points)
+
+        #smooth ROI box
+        smooth_box = smoothing.smooth_box(prev_smooth_box, bounding_box)
+        prev_smooth_box = smooth_box
+
+        #map all to int
+        bx, by, bw, bh = map(int, smooth_box)
 
         #crop image to face
         face_crop = raw_frame[by:by+bh, bx:bx+bw]
@@ -119,7 +127,7 @@ try:
         # 4) align + normalise
 
         #match landmarks to new size/aspect ratio
-        points_cropped = [(px - bx, py - by) for (px, py) in smoothed]
+        points_cropped = [(px - bx, py - by) for (px, py) in points]
 
 
         # 4.1) align
@@ -157,6 +165,12 @@ try:
             (min(max(x, 0.0), 1.0), min(max(y, 0.0), 1.0))
             for (x, y) in norm_aligned_points
         ]
+
+
+        # 5) feature extraction
+
+        
+
 
 
 
