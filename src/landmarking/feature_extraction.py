@@ -9,23 +9,33 @@ def dist(p1, p2):
     return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
 
 def slope(p1, p2):
-    return (p2[1] - p1[1]) / (p2[0] - p1[0] + 1e-6)
+    dx = p2[0] - p1[0]
+    dy = p2[1] - p1[1]
+
+    if abs(dx) < 1e-3:
+        return 0.0
+
+    angle = math.atan2(dy, dx)
+    return (angle / math.pi)
+
+def clamp(x, min_val=-3.0, max_val=3.0):
+    return max(min(x, max_val), min_val)
 
 
 def extract_features(points):
     features = []
 
 
-    face_width = dist(points[234], points[454])  # between cheeks
+    face_width = max(dist(points[234], points[454]), 1e-6)
 
     #------------------eye openness------------------#
     left_eye_vert = dist(points[159], points[145])
     left_eye_horiz = dist(points[33], points[133])
-    left_eye_open = left_eye_vert / (left_eye_horiz + 1e-6)
+    left_eye_open = clamp(left_eye_vert / (left_eye_horiz + 1e-6))
 
     right_eye_vert = dist(points[386], points[374])
     right_eye_horiz = dist(points[362], points[263])
-    right_eye_open = right_eye_vert / (right_eye_horiz + 1e-6)
+    right_eye_open = clamp(right_eye_vert / (right_eye_horiz + 1e-6))
     #------------------------------------------------#
 
     #---------------eye to mouth dist----------------#
@@ -58,8 +68,8 @@ def extract_features(points):
     left_eyebrow = compute_centre(points, [70,63])
     right_eyebrow = compute_centre(points, [300,293])
 
-    left_brow_height = (left_eye_centre[1] - left_eyebrow[1]) / (face_width + 1e-6)
-    right_brow_height = (right_eye_centre[1] - right_eyebrow[1]) / (face_width + 1e-6)
+    left_brow_height = clamp((left_eye_centre[1] - left_eyebrow[1]) / (face_width + 1e-6))
+    right_brow_height = clamp((right_eye_centre[1] - right_eyebrow[1]) / (face_width + 1e-6))
 
     left_brow_tilt = slope(points[70], points[63])
     right_brow_tilt = slope(points[300], points[293])
