@@ -71,6 +71,7 @@ for folder_name in os.listdir(DATA_PATH):
     for file in os.listdir(folder_path):
         img_path = os.path.join(folder_path, file)
 
+        # load image
         img = cv2.imread(img_path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         if img is None:
@@ -79,8 +80,7 @@ for folder_name in os.listdir(DATA_PATH):
         else:
             print("Load Image: Success for file ", file)
 
-        #img = mp.Image(image_format=mp.ImageFormat.SRGB, data=img)
-
+        # landmark image
         landmark_result = detect_landmarks(img, landmarker)
         if landmark_result is None or not landmark_result.face_landmarks:
             print("    Landmarks not detected in file ", file, " - path=", img_path)
@@ -95,6 +95,7 @@ for folder_name in os.listdir(DATA_PATH):
             for lm in landmarks
         ]
 
+        # extract features from landmarks
         features = extract_features(points)
         if features is None:
             print("    Features not extracted from file ", file, " - path=", img_path)
@@ -102,6 +103,7 @@ for folder_name in os.listdir(DATA_PATH):
         else:
             print("Features: Success for file ", file)
 
+        # add to X and y
         X.append(features)
         y.append(label)
 
