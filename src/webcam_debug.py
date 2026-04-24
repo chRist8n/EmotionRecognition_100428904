@@ -14,6 +14,7 @@ import numpy as np
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+from collections import deque
 
 #import preprocess
 #import detection.face_detector as detector
@@ -21,6 +22,7 @@ import landmarking.landmark_detector as landmarking
 import landmarking.cropping as cropping
 import landmarking.smoothing as smoothing
 import landmarking.feature_extraction as feature_extraction
+from classification.MLP_test import model as test_model
 
 
 
@@ -39,6 +41,19 @@ options = FaceLandmarkerOptions(
 
 landmarker = FaceLandmarker.create_from_options(options)
 
+
+label_map = {
+    0: "Neutral",
+    1: "Happy",
+    2: "Sad",
+    3: "Angry",
+    4: "Surprise",
+    5: "Fear",
+    6: "Disgust"
+}
+
+
+emotion_history = deque(maxlen=5)
 
 prev_feedback = None
 prev_smooth_landmarks = None
@@ -184,6 +199,20 @@ try:
         features = feature_extraction.extract_features(na_points)
 
 
+        # 6) classify
+
+        #features = np.array(features).reshape(1, -1)
+        pred = test_model.predict([features])[0]
+        probs = test_model.predict_proba([features])[0]
+        confidence = max(probs)
+
+        if confidence < 0.3:
+            pred_label = "uncertain"
+        else:
+            emotion_history.append(pred)
+            pred_label = max(set(emotion_history), key=emotion_history.count)
+
+
 
         ## PIPELINE END ##
 
@@ -215,20 +244,30 @@ try:
         # cv2.line(debug, (le_x, le_y), (re_x, re_y), (0, 255, 255), 1)
 
         #print features to screen
-        y0 = 20
+        # y0 = 20
 
-        for i, f in enumerate(features):
-            text = f"F{i}: {f:.3f}"
-            cv2.putText(
-                debug,
-                text,
-                (10, y0 + i * 20),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
-                (0, 0, 0),
-                1,
-                cv2.LINE_AA
-            )
+        # for i, f in enumerate(features):
+        #     text = f"F{i}: {f:.3f}"
+        #     cv2.putText(
+        #         debug,
+        #         text,
+        #         (10, y0 + i * 20),
+        #         cv2.FONT_HERSHEY_SIMPLEX,
+        #         0.5,
+        #         (0, 0, 0),
+        #         1,
+        #         cv2.LINE_AA
+        #     )
+
+        cv2.putText(
+            debug,
+            f"{label_map.get(pred_label)} ({confidence:.2f})",
+            (30, 40),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (0, 255, 0),
+            2
+        )
 
 
         cv2.imshow("Webcam Debug", debug)
