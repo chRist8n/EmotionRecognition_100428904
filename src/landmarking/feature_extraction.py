@@ -43,6 +43,8 @@ def extract_features(points):
     mouth_horiz = dist(points[78], points[308])
     mouth_open = mouth_vert / (mouth_horiz + 1e-6)
     mouth_width = mouth_horiz / (face_width + 1e-6)
+
+    mouth_eye_ratio = mouth_open / (eye_mouth_dist + 1e-6)
     #------------------------------------------------#
 
     #------------------mouth shape-------------------#
@@ -66,6 +68,8 @@ def extract_features(points):
 
     left_brow_tilt = clamp(slope(points[70], points[63]))
     right_brow_tilt = clamp(slope(points[300], points[293]))
+
+    brow_eye_ratio = (left_brow_height + right_brow_height) / (left_eye_open + right_eye_open + 1e-6)
     #------------------------------------------------#
 
     #--------------------symmetry--------------------#
@@ -91,27 +95,29 @@ def extract_features(points):
         eye_mouth_dist,
         mouth_open,
         mouth_width,
+        mouth_eye_ratio,
         mouth_curve,
         left_brow_height,
         right_brow_height,
         left_brow_tilt,
         right_brow_tilt,
+        brow_eye_ratio,
         eye_diff,
         eye_y_diff,
         eye_inner_y_diff,
-        eye_x_diff,
-        mouth_asym,
-        brow_diff
+        #eye_x_diff,
+        #mouth_asym,
+        #brow_diff
     ])
     #------------------------------------------------#
 
     #------------------key indices-------------------#
-    key_indices = [33, 133, 362, 263, 13, 14, 78, 308]
+    # key_indices = [33, 133, 78]
 
-    for i in key_indices:
-        x = points[i][0] / face_width
-        y = points[i][1] / face_width
-        features.extend([x, y])
+    # for i in key_indices:
+    #     x = points[i][0] / face_width
+    #     y = points[i][1] / face_width
+    #     features.extend([x, y])
 
     # eye vertical offset -> features.append((points[133][1] - points[263][1]) / face_width)
     #------------------------------------------------#

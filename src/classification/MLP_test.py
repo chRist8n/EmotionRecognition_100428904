@@ -13,9 +13,10 @@ X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, stratify=
 sample_weights = compute_sample_weight(class_weight="balanced", y=y_train)
 
 model = MLPClassifier(
-    hidden_layer_sizes=(32, 16),
+    hidden_layer_sizes=(64, 32),
     activation="relu",
-    max_iter=300,
+    max_iter=500,
+    alpha=0.001,
     random_state=42,
     early_stopping=True
 )
@@ -49,25 +50,29 @@ feature_names = [
     "eye_mouth_dist",
     "mouth_open",
     "mouth_width",
+    "mouth_eye_ratio",
     "mouth_curve",
     "left_brow_height",
     "right_brow_height",
     "left_brow_tilt",
     "right_brow_tilt",
+    "brow_eye_ratio",
     "eye_diff",
     "eye_y_diff",
-    "eye_inner_y_diff",
-    "eye_x_diff",
-    "mouth_asym",
-    "brow_diff",
-    "key_feature_0",
-    "key_feature_1",
-    "key_feature_2",
-    "key_feature_3",
-    "key_feature_4",
-    "key_feature_5",
-    "key_feature_6",
-    "key_feature_7"
+    "eye_inner_y_diff"
+    #"eye_x_diff",
+    #"mouth_asym",
+    #"brow_diff",
+    # "point_33_x",
+    # "point_33_y",
+    # "point_133_x",
+    # "point_133_y",
+    # #"point_263_x",
+    # #"point_263_y",
+    # "point_78_x",
+    # "point_78_y"
+    # # "point_308_x",
+    # # "point_308_y"
 ]
 
 for i in indices:
