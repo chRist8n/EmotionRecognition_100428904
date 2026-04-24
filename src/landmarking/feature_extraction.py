@@ -9,14 +9,7 @@ def dist(p1, p2):
     return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
 
 def slope(p1, p2):
-    dx = p2[0] - p1[0]
-    dy = p2[1] - p1[1]
-
-    if abs(dx) < 1e-3:
-        return 0.0
-
-    angle = math.atan2(dy, dx)
-    return (angle / math.pi)
+    return math.atan2(p2[1] - p1[1], p2[0] - p1[0]) / math.pi
 
 def clamp(x, min_val=-3.0, max_val=3.0):
     return max(min(x, max_val), min_val)
@@ -71,16 +64,24 @@ def extract_features(points):
     left_brow_height = clamp((left_eye_centre[1] - left_eyebrow[1]) / (face_width + 1e-6))
     right_brow_height = clamp((right_eye_centre[1] - right_eyebrow[1]) / (face_width + 1e-6))
 
-    left_brow_tilt = slope(points[70], points[63])
-    right_brow_tilt = slope(points[300], points[293])
+    left_brow_tilt = clamp(slope(points[70], points[63]))
+    right_brow_tilt = clamp(slope(points[300], points[293]))
     #------------------------------------------------#
 
     #--------------------symmetry--------------------#
-    #openness
+    #eye openness
     eye_diff = abs(left_eye_open - right_eye_open)
 
-    #positional
+    #eye positions
     eye_y_diff = abs(left_eye_centre[1] - right_eye_centre[1])
+    eye_inner_y_diff = abs((points[159][1] - points[386][1]) / face_width)
+    eye_x_diff = abs((points[33][0] - points[362][0]) / face_width)
+
+    #mouth
+    mouth_asym = abs(points[78][1] - points[308][1]) / (face_width + 1e-6)
+
+    #brows
+    brow_diff = abs(left_brow_height - right_brow_height)
     #------------------------------------------------#
 
     #------------------------------------------------#
@@ -96,7 +97,11 @@ def extract_features(points):
         left_brow_tilt,
         right_brow_tilt,
         eye_diff,
-        eye_y_diff
+        eye_y_diff,
+        eye_inner_y_diff,
+        eye_x_diff,
+        mouth_asym,
+        brow_diff
     ])
     #------------------------------------------------#
 
@@ -104,10 +109,11 @@ def extract_features(points):
     key_indices = [33, 133, 362, 263, 13, 14, 78, 308]
 
     for i in key_indices:
-        features.extend([
-            points[i][0] / (face_width + 1e-6),
-            points[i][1] / (face_width + 1e-6)
-            ])
+        x = points[i][0] / face_width
+        y = points[i][1] / face_width
+        features.extend([x, y])
+
+    # eye vertical offset -> features.append((points[133][1] - points[263][1]) / face_width)
     #------------------------------------------------#
 
     return features
