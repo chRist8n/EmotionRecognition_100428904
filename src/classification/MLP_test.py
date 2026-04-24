@@ -3,17 +3,20 @@ from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score, classification_report
+from imblearn.over_sampling import RandomOverSampler
 
+ros = RandomOverSampler()
 
 X = np.load("data/processed/X.npy")
 y = np.load("data/processed/y.npy")
 
 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
+X_resampled, y_resampled = ros.fit_resample(X_train, y_train)
 
 sample_weights = compute_sample_weight(class_weight="balanced", y=y_train)
 
 model = MLPClassifier(
-    hidden_layer_sizes=(64, 32),
+    hidden_layer_sizes=(64, 32, 16),
     activation="relu",
     max_iter=500,
     alpha=0.001,
@@ -21,13 +24,17 @@ model = MLPClassifier(
     early_stopping=True
 )
 
-model.fit(X_train, y_train, sample_weight=sample_weights)
+model.fit(X_resampled, y_resampled)
+#model.fit(X_train, y_train, sample_weight=sample_weights)
 
 y_pred = model.predict(X_val)
 
 print("Accuracy:", accuracy_score(y_val, y_pred))
 print(classification_report(y_val, y_pred))
 
+
+
+#===============================================================#
 
 #test importances
 from sklearn.inspection import permutation_importance
