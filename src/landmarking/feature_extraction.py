@@ -79,13 +79,6 @@ def extract_features(points):
     #eye positions
     eye_y_diff = abs(left_eye_centre[1] - right_eye_centre[1])
     eye_inner_y_diff = abs((points[159][1] - points[386][1]) / face_width)
-    eye_x_diff = abs((points[33][0] - points[362][0]) / face_width)
-
-    #mouth
-    mouth_asym = abs(points[78][1] - points[308][1]) / (face_width + 1e-6)
-
-    #brows
-    brow_diff = abs(left_brow_height - right_brow_height)
     #------------------------------------------------#
 
     #------------------------------------------------#
@@ -104,22 +97,9 @@ def extract_features(points):
         brow_eye_ratio,
         eye_diff,
         eye_y_diff,
-        eye_inner_y_diff,
-        #eye_x_diff,
-        #mouth_asym,
-        #brow_diff
+        eye_inner_y_diff
     ])
     #------------------------------------------------#
 
-    #------------------key indices-------------------#
-    # key_indices = [33, 133, 78]
-
-    # for i in key_indices:
-    #     x = points[i][0] / face_width
-    #     y = points[i][1] / face_width
-    #     features.extend([x, y])
-
-    # eye vertical offset -> features.append((points[133][1] - points[263][1]) / face_width)
-    #------------------------------------------------#
 
     return features
