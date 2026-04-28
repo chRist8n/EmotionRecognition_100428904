@@ -198,12 +198,19 @@ try:
 
         features = feature_extraction.extract_features(na_points)
 
+        #normalise features
+        mean = np.load("data/processed/mean.npy")
+        std = np.load("data/processed/std.npy")
+
+        features = np.array(features)
+        features = (features - mean) / (std + 1e-6)
+        features = features.reshape(1, -1)
 
         # 6) classify
 
         #features = np.array(features).reshape(1, -1)
-        pred = test_model.predict([features])[0]
-        probs = test_model.predict_proba([features])[0]
+        pred = test_model.predict(features)[0]
+        probs = test_model.predict_proba(features)[0]
         confidence = max(probs)
 
         if confidence < 0.3:

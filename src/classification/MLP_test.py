@@ -54,32 +54,31 @@ indices = np.argsort(importances)[::-1]
 feature_names = [
     "left_eye_open",
     "right_eye_open",
+    "eye_squint",
+    #"cheek_raise",
     "eye_mouth_dist",
     "mouth_open",
     "mouth_width",
+    "mouth_area_proxy",
+    "lip_compression",
     "mouth_eye_ratio",
     "mouth_curve",
+    "mouth_stretch",
+    "mouth_corner_diff",
     "left_brow_height",
     "right_brow_height",
     "left_brow_tilt",
     "right_brow_tilt",
     "brow_eye_ratio",
+    "lip_ratio",
     "eye_diff",
     "eye_y_diff",
-    "eye_inner_y_diff"
+    "eye_inner_y_diff",
+    "neutral_score",
+    "face_asymmetry"
     #"eye_x_diff",
     #"mouth_asym",
     #"brow_diff",
-    # "point_33_x",
-    # "point_33_y",
-    # "point_133_x",
-    # "point_133_y",
-    # #"point_263_x",
-    # #"point_263_y",
-    # "point_78_x",
-    # "point_78_y"
-    # # "point_308_x",
-    # # "point_308_y"
 ]
 
 for i in indices:
