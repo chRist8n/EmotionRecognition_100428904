@@ -52,7 +52,7 @@ label_map = {
 X = []
 y = []
 
-dataset_type = "train"          # <==== CHANGE THIS DEPENDING ON WHETHER ITS A TESTING SET OR TRAINING SET ("test"/"train")
+dataset_type = "test"          # <==== CHANGE THIS DEPENDING ON WHETHER ITS A TESTING SET OR TRAINING SET ("test"/"train")
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 DATA_PATH = os.path.join(BASE_DIR, "data", "raw", "RAF_DB", "DATASET", dataset_type)

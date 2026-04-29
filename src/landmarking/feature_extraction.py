@@ -97,8 +97,8 @@ def extract_features(points):
     upper_lip = dist(points[13], points[0])   # top lip to nose area
     lower_lip = dist(points[14], points[17])  # bottom lip to chin area
 
-    lip_ratio = upper_lip / (lower_lip + 1e-6)
-    #lip_ratio = mouth_open / (mouth_width + 1e-6)      <=== new version
+    #lip_ratio = upper_lip / (lower_lip + 1e-6)
+    lip_ratio = mouth_open / (mouth_width + 1e-6)      #<=== new version
 
     # eye openness
     eye_diff = abs(left_eye_open - right_eye_open)
