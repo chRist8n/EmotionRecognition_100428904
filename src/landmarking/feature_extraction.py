@@ -37,9 +37,9 @@ def extract_features(points):
     #------------------------------------------------#
 
     #---------------------cheeks---------------------#
-    cheek_left = dist(points[33], points[50])
-    cheek_right = dist(points[263], points[280])
-    cheek_raise = -(cheek_left + cheek_right) / 2
+    # cheek_left = dist(points[33], points[50])
+    # cheek_right = dist(points[263], points[280])
+    # cheek_raise = -(cheek_left + cheek_right) / 2
     #------------------------------------------------#
 
     #---------------------mouth----------------------#
@@ -68,6 +68,8 @@ def extract_features(points):
     mouth_stretch = dist(left_corner, right_corner) / (face_width + 1e-6)
 
     mouth_corner_diff = abs(left_corner[1] - right_corner[1]) / face_width
+
+    smile_activation = (mouth_width - mouth_open)
     #------------------------------------------------#
 
     #--------------------eyebrows--------------------#
@@ -96,6 +98,7 @@ def extract_features(points):
     lower_lip = dist(points[14], points[17])  # bottom lip to chin area
 
     lip_ratio = upper_lip / (lower_lip + 1e-6)
+    #lip_ratio = mouth_open / (mouth_width + 1e-6)      <=== new version
 
     # eye openness
     eye_diff = abs(left_eye_open - right_eye_open)
@@ -113,10 +116,15 @@ def extract_features(points):
     )
 
     # general asymmetry
+    # face_asymmetry = (
+    #     eye_diff +
+    #     abs(left_brow_height - right_brow_height) +
+    #     abs(points[78][1] - points[308][1]) / face_width
+    # )
     face_asymmetry = (
-        eye_diff +
+        abs(left_eye_open - right_eye_open) +           # <== new version
         abs(left_brow_height - right_brow_height) +
-        abs(points[78][1] - points[308][1]) / face_width
+        abs((points[78][1] - points[308][1]) / face_width)
     )
     #------------------------------------------------#
 
@@ -125,7 +133,7 @@ def extract_features(points):
         left_eye_open,
         right_eye_open,
         eye_squint,
-        #cheek_raise,
+        #smile_activation,
         eye_mouth_dist,
         mouth_open,
         mouth_width,
