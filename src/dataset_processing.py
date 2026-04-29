@@ -52,8 +52,10 @@ label_map = {
 X = []
 y = []
 
+dataset_type = "train"          # <==== CHANGE THIS DEPENDING ON WHETHER ITS A TESTING SET OR TRAINING SET ("test"/"train")
+
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-DATA_PATH = os.path.join(BASE_DIR, "data", "raw", "RAF_DB", "DATASET", "train")
+DATA_PATH = os.path.join(BASE_DIR, "data", "raw", "RAF_DB", "DATASET", dataset_type)
 
 
 #############################################################
@@ -124,11 +126,20 @@ X = (X - mean) / (std + 1e-6)
 # save dataset
 os.makedirs("data/processed", exist_ok=True)
 
-np.save("data/processed/X.npy", X)
-np.save("data/processed/y.npy", y)
+if dataset_type == "test":
+    np.save("data/processed/test/X.npy", X)
+    np.save("data/processed/test/y.npy", y)
 
-np.save("data/processed/mean.npy", mean)
-np.save("data/processed/std.npy", std)
+    np.save("data/processed/test/mean.npy", mean)
+    np.save("data/processed/test/std.npy", std)
+elif dataset_type == "train":
+    np.save("data/processed/train/X.npy", X)
+    np.save("data/processed/train/y.npy", y)
+
+    np.save("data/processed/train/mean.npy", mean)
+    np.save("data/processed/train/std.npy", std)
+else:
+    print("Error saving data - No dataset_type ('test'/'train') given.")
 
 print("Done:")
 print("Samples:", len(X))

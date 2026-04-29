@@ -7,8 +7,8 @@ from imblearn.over_sampling import RandomOverSampler
 
 ros = RandomOverSampler()
 
-X = np.load("data/processed/X.npy")
-y = np.load("data/processed/y.npy")
+X = np.load("data/processed/train/X.npy")
+y = np.load("data/processed/train/y.npy")
 
 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
 X_resampled, y_resampled = ros.fit_resample(X_train, y_train)

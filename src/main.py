@@ -1,28 +1,46 @@
-from PIL import Image
-from PIL import ImageDraw
 import numpy as np
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
 
-from detection.face_detector import detect_faces
+import classification.MLP as mlp
+
+X_train = np.load("data/processed/train/X.npy")
+y_train = np.load("data/processed/train/y.npy")
+
+X_test = np.load("data/processed/test/X.npy")
+y_test = np.load("data/processed/test/y.npy")
+
 
 def main():
-    #Test face detector:
+    #Test MLP
+    model = mlp.MLP(input_size=23, hidden_size_1=64, output_size=7)
+    model.train(X_train, y_train, epochs=200)
 
-    #load preprocessed image
-    img = np.load("data/debugging_images/test_normalized.npy")
-    print("Image shape:", img.shape)
+    preds = model.predict(X_test)
 
-    #run detector
-    detections = detect_faces(img)
-    print("Detections: ", detections)
+    print("\n\nDone: \n")
 
-    # convert back to PIL and draw
-    img_draw = Image.fromarray((img * 255).astype(np.uint8))
-    draw = ImageDraw.Draw(img_draw)
+    print("Pred shape:", preds.shape)
+    print("Test shape:", y_test.shape)
 
-    for (x, y, w, h) in detections:
-        draw.rectangle([x, y, x + w, y + h], outline=255)
+    accuracy = np.mean(preds == y_test)
+    print("Accuracy:", accuracy)
 
-    img_draw.show()
+    print("Pred counts:", np.bincount(preds))
+    print("True counts:", np.bincount(y_test))
+    print(confusion_matrix(y_test, preds))
+
+    print(classification_report(y_test, preds))
+
+
+    # X = np.random.rand(1, 23)
+    # #X = np.random.rand(5, 23)
+
+    # output = model.forward(X)
+    # print("output:", output)
+    # print("shape:", output.shape)
+
+    # print(np.sum(output, axis=1))
 
 
 if __name__ == "__main__":
