@@ -199,8 +199,8 @@ try:
         features = feature_extraction.extract_features(na_points)
 
         #normalise features
-        mean = np.load("data/processed/mean.npy")
-        std = np.load("data/processed/std.npy")
+        mean = np.load("data/processed/train/mean.npy")
+        std = np.load("data/processed/train/std.npy")
 
         features = np.array(features)
         features = (features - mean) / (std + 1e-6)

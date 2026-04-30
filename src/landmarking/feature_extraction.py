@@ -57,6 +57,8 @@ def extract_features(points):
     lip_compression = 1.0 / (mouth_open + 1e-6)
 
     mouth_eye_ratio = mouth_open / (eye_mouth_dist + 1e-6)
+
+
     
     left_corner = points[78]
     right_corner = points[308]
@@ -68,6 +70,9 @@ def extract_features(points):
     mouth_stretch = dist(left_corner, right_corner) / (face_width + 1e-6)
 
     mouth_corner_diff = abs(left_corner[1] - right_corner[1]) / face_width
+
+    smile_asymmetry = (left_corner[1] - right_corner[1]) / face_width
+    smile_intensity = mouth_curve * mouth_width
 
     smile_activation = (mouth_width - mouth_open)
     #------------------------------------------------#
@@ -90,6 +95,9 @@ def extract_features(points):
     avg_eye_openness = (left_eye_open + right_eye_open) / 2
     avg_brow_height = (left_brow_height + right_brow_height) / 2
     brow_eye_ratio = clamp(avg_eye_openness / (avg_brow_height + 1e-6))
+
+    brow_raise = (left_brow_height + right_brow_height) / 2
+    brow_asymmetry = abs(left_brow_height - right_brow_height)
     #------------------------------------------------#
 
     #--------------------symmetry--------------------#
@@ -97,15 +105,7 @@ def extract_features(points):
     upper_lip = dist(points[13], points[0])   # top lip to nose area
     lower_lip = dist(points[14], points[17])  # bottom lip to chin area
 
-    #lip_ratio = upper_lip / (lower_lip + 1e-6)
-    lip_ratio = mouth_open / (mouth_width + 1e-6)      #<=== new version
-
-    # eye openness
-    eye_diff = abs(left_eye_open - right_eye_open)
-
-    # eye positions
-    eye_y_diff = abs(left_eye_centre[1] - right_eye_centre[1])
-    eye_inner_y_diff = abs((points[159][1] - points[386][1]) / face_width)
+    lip_ratio = mouth_open / (mouth_width + 1e-6)
 
     # neutral score
     neutral_score = (
@@ -115,12 +115,6 @@ def extract_features(points):
         abs(right_brow_height)
     )
 
-    # general asymmetry
-    # face_asymmetry = (
-    #     eye_diff +
-    #     abs(left_brow_height - right_brow_height) +
-    #     abs(points[78][1] - points[308][1]) / face_width
-    # )
     face_asymmetry = (
         abs(left_eye_open - right_eye_open) +           # <== new version
         abs(left_brow_height - right_brow_height) +
@@ -137,22 +131,25 @@ def extract_features(points):
         eye_mouth_dist,
         mouth_open,
         mouth_width,
-        mouth_area_proxy,
-        lip_compression,
-        mouth_eye_ratio,
+        #mouth_area_proxy,
+        #lip_compression,   #smile asymmetry, smile intensity
+        #mouth_eye_ratio,
         mouth_curve,
         mouth_stretch,
         mouth_corner_diff,
+        smile_asymmetry,
+        smile_intensity,
         left_brow_height,
         right_brow_height,
         left_brow_tilt,
         right_brow_tilt,
-        brow_eye_ratio,
+        brow_raise,
+        brow_asymmetry,
         lip_ratio,
-        eye_diff,
-        eye_y_diff,
-        eye_inner_y_diff,
-        neutral_score,
+        #eye_diff,
+        #eye_y_diff,
+        #eye_inner_y_diff,
+        #neutral_score,  #maybe remove
         face_asymmetry
     ])
     #------------------------------------------------#
