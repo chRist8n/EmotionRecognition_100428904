@@ -83,6 +83,7 @@ class MLP:
         class_counts = np.bincount(y)
         class_weights = np.median(class_counts) / (class_counts + 1e-6)
         self.class_weights = class_weights / np.mean(class_weights)
+        #self.class_weights = (median / counts) ** 0.5
 
         for epoch in range(epochs):
             perm = np.random.permutation(len(X))
@@ -94,7 +95,7 @@ class MLP:
 
             self.backward(X, y)
 
-            if epoch % 10 == 0:
+            if epoch % 20 == 0:
                 print(f"Epoch {epoch}, Loss: {loss}")
 
 
