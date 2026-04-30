@@ -80,6 +80,10 @@ class MLP:
             if epoch % 10 == 0:
                 print(f"Epoch {epoch}, Loss: {loss}")
 
+
+    def predict_proba(self, X):
+        return self.forward(X)
+
     ## Prediction
     def predict(self, X):
         probs = self.forward(X)

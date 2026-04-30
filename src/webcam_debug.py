@@ -22,8 +22,8 @@ import landmarking.landmark_detector as landmarking
 import landmarking.cropping as cropping
 import landmarking.smoothing as smoothing
 import landmarking.feature_extraction as feature_extraction
-from classification.MLP_test import model as test_model
-
+#from classification.MLP_test import model as test_model
+import classification.MLP as mlp
 
 
 BaseOptions = python.BaseOptions
@@ -40,6 +40,13 @@ options = FaceLandmarkerOptions(
 )
 
 landmarker = FaceLandmarker.create_from_options(options)
+
+#create MLP
+X_train = np.load("data/processed/train/X.npy")
+y_train = np.load("data/processed/train/y.npy")
+
+model = mlp.MLP(input_size=19, hidden_size_1=64, output_size=7)
+model.train(X_train, y_train, epochs=200)
 
 
 label_map = {
@@ -208,12 +215,17 @@ try:
 
         # 6) classify
 
-        #features = np.array(features).reshape(1, -1)
-        pred = test_model.predict(features)[0]
-        probs = test_model.predict_proba(features)[0]
+        preds = model.predict(features)
+        pred = preds[0]
+        probs = model.predict_proba(features)[0]
         confidence = max(probs)
 
-        if confidence < 0.3:
+        # #features = np.array(features).reshape(1, -1)
+        # pred = test_model.predict(features)[0]
+        # probs = test_model.predict_proba(features)[0]
+        
+
+        if confidence < 0.15:
             pred_label = "uncertain"
         else:
             emotion_history.append(pred)
