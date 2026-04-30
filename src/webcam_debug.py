@@ -45,8 +45,8 @@ landmarker = FaceLandmarker.create_from_options(options)
 X_train = np.load("data/processed/train/X.npy")
 y_train = np.load("data/processed/train/y.npy")
 
-model = mlp.MLP(input_size=19, hidden_size_1=64, output_size=7)
-model.train(X_train, y_train, epochs=200)
+model = mlp.MLP(input_size=19, hidden_size_1=64, hidden_size_2=32, output_size=7)
+model.train(X_train, y_train, epochs=600)
 
 
 label_map = {

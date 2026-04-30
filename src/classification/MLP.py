@@ -1,15 +1,18 @@
 import numpy as np
 
 class MLP:
-    def __init__(self, input_size, hidden_size_1, output_size, lr=0.075):
+    def __init__(self, input_size, hidden_size_1, hidden_size_2, output_size, lr=0.1):
         self.lr = lr
 
         # weights
-        self.W1 = np.random.randn(input_size, hidden_size_1) * 0.075
+        self.W1 = np.random.randn(input_size, hidden_size_1) * 0.05
         self.b1 = np.zeros((1, hidden_size_1))
 
-        self.W2 = np.random.randn(hidden_size_1, output_size) * 0.075
-        self.b2 = np.zeros((1, output_size))
+        self.W2 = np.random.randn(hidden_size_1, hidden_size_2) * 0.05
+        self.b2 = np.zeros((1, hidden_size_2))
+
+        self.W3 = np.random.randn(hidden_size_2, output_size) * 0.05
+        self.b3 = np.zeros((1, output_size))
 
     ## Forward Pass
     def relu(self, x):
@@ -24,9 +27,12 @@ class MLP:
         self.A1 = self.relu(self.Z1)
 
         self.Z2 = self.A1 @ self.W2 + self.b2
-        self.A2 = self.softmax(self.Z2)
+        self.A2 = self.relu(self.Z2)
 
-        return self.A2
+        self.Z3 = self.A2 @ self.W3 + self.b3
+        self.A3 = self.softmax(self.Z3)
+
+        return self.A3
     
     ## Loss Function
     def compute_loss(self, y_pred, y_true):
@@ -41,25 +47,36 @@ class MLP:
     def backward(self, X, y_true):
         m = X.shape[0]
 
-        dZ2 = self.A2.copy() 
-        dZ2[range(m), y_true] -= 1 
-        dZ2 *= self.class_weights[y_true][:, None] #apply weights 
-        dZ2 /= m 
+        dZ3 = self.A3.copy()
+        dZ3[range(m), y_true] -= 1
+        dZ3 *= self.class_weights[y_true][:, None]
+        dZ3 /= m
 
-        dW2 = self.A1.T @ dZ2 
-        db2 = np.sum(dZ2, axis=0, keepdims=True) 
+        # Output layer
+        dW3 = self.A2.T @ dZ3
+        db3 = np.sum(dZ3, axis=0, keepdims=True)
 
-        dA1 = dZ2 @ self.W2.T 
-        dZ1 = dA1 * (self.Z1 > 0) #ReLU derivative dW1 = X.T @ dZ1 db1 = np.sum(dZ1, axis=0, keepdims=True)
+        # Hidden layer 2
+        dA2 = dZ3 @ self.W3.T
+        dZ2 = dA2 * (self.Z2 > 0)
 
-        dW1 = X.T @ dZ1 
+        dW2 = self.A1.T @ dZ2
+        db2 = np.sum(dZ2, axis=0, keepdims=True)
+
+        # Hidden layer 1
+        dA1 = dZ2 @ self.W2.T
+        dZ1 = dA1 * (self.Z1 > 0)
+
+        dW1 = X.T @ dZ1
         db1 = np.sum(dZ1, axis=0, keepdims=True)
 
-        # update
-        self.W1 -= self.lr * dW1 
-        self.b1 -= self.lr * db1 
-        self.W2 -= self.lr * dW2 
+        # Update
+        self.W1 -= self.lr * dW1
+        self.b1 -= self.lr * db1
+        self.W2 -= self.lr * dW2
         self.b2 -= self.lr * db2
+        self.W3 -= self.lr * dW3
+        self.b3 -= self.lr * db3
 
     ## Training Loop
     def train(self, X, y, epochs=100):
