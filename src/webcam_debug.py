@@ -47,7 +47,7 @@ y_train = np.load("data/processed/train/y.npy")
 
 model = mlp.MLP(input_size=19, hidden_size_1=64, hidden_size_2=32, output_size=7)
 model.train(X_train, y_train, epochs=1500)
-print("Model training finished.")
+
 
 
 label_map = {

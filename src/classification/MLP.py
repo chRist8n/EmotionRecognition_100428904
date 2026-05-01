@@ -79,7 +79,7 @@ class MLP:
         self.b3 -= self.lr * db3
 
     ## Training Loop
-    def train(self, X, y, epochs=100):
+    def train(self, X, y, epochs=100, batch_size=64):
         class_counts = np.bincount(y)
         class_weights = np.median(class_counts) / (class_counts + 1e-6)
         self.class_weights = class_weights / np.mean(class_weights)
@@ -90,15 +90,26 @@ class MLP:
             X = X[perm]
             y = y[perm]
 
-            y_pred = self.forward(X)
-            loss = self.compute_loss(y_pred, y)
+            for i in range(0, len(X), batch_size):
+                X_batch = X[i:i+batch_size]
+                y_batch = y[i:i+batch_size]
 
-            self.backward(X, y)
+                y_pred = self.forward(X_batch)
+                loss = self.compute_loss(y_pred, y_batch)
+
+                self.backward(X_batch, y_batch)
+
+            # y_pred = self.forward(X)
+            # loss = self.compute_loss(y_pred, y)
+
+            # self.backward(X, y)
 
             # self.lr *= 0.995
 
             if epoch % 50 == 0:
                 print(f"Epoch {epoch}, Loss: {loss}")
+        
+        print("Model training complete.")
 
 
     def predict_proba(self, X):
