@@ -14,6 +14,8 @@ class MLP:
         self.W3 = np.random.randn(hidden_size_2, output_size) * 0.05
         self.b3 = np.zeros((1, output_size))
 
+        #self.momentum = 0.9
+
     ## Forward Pass
     def relu(self, x):
         return np.maximum(0, x)
@@ -104,7 +106,7 @@ class MLP:
 
             # self.backward(X, y)
 
-            # self.lr *= 0.995
+            self.lr *= 0.995
 
             if epoch % 50 == 0:
                 print(f"Epoch {epoch}, Loss: {loss}")
