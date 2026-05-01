@@ -13,7 +13,7 @@ y_test = np.load("data/processed/test/y.npy")
 
 def main():
     #Test MLP
-    model = mlp.MLP(input_size=19, hidden_size_1=64, hidden_size_2=32, output_size=7)
+    model = mlp.MLP(input_size=12, hidden_size_1=64, hidden_size_2=32, output_size=7)
     model.train(X_train, y_train, epochs=300)
 
     preds = model.predict(X_test)
