@@ -1,7 +1,7 @@
 import numpy as np
 
 class MLP:
-    def __init__(self, input_size, hidden_size_1, hidden_size_2, output_size, lr=0.1):
+    def __init__(self, input_size, hidden_size_1, hidden_size_2, output_size, lr=0.03):
         self.lr = lr
 
         # weights
@@ -14,7 +14,20 @@ class MLP:
         self.W3 = np.random.randn(hidden_size_2, output_size) * 0.05
         self.b3 = np.zeros((1, output_size))
 
-        #self.momentum = 0.9
+        # self.W1 = np.random.randn(input_size, hidden_size_1) * np.sqrt(2 / input_size)
+        # self.W2 = np.random.randn(hidden_size_1, hidden_size_2) * np.sqrt(2 / hidden_size_1)
+        # self.W3 = np.random.randn(hidden_size_2, output_size) * np.sqrt(2 / hidden_size_2)
+
+        self.momentum = 0.5
+
+        self.vW1 = np.zeros_like(self.W1)
+        self.vb1 = np.zeros_like(self.b1)
+
+        self.vW2 = np.zeros_like(self.W2)
+        self.vb2 = np.zeros_like(self.b2)
+
+        self.vW3 = np.zeros_like(self.W3)
+        self.vb3 = np.zeros_like(self.b3)
 
     ## Forward Pass
     def relu(self, x):
@@ -73,12 +86,29 @@ class MLP:
         db1 = np.sum(dZ1, axis=0, keepdims=True)
 
         # Update
-        self.W1 -= self.lr * dW1
-        self.b1 -= self.lr * db1
-        self.W2 -= self.lr * dW2
-        self.b2 -= self.lr * db2
-        self.W3 -= self.lr * dW3
-        self.b3 -= self.lr * db3
+        # self.W1 -= self.lr * dW1
+        # self.b1 -= self.lr * db1
+        # self.W2 -= self.lr * dW2
+        # self.b2 -= self.lr * db2
+        # self.W3 -= self.lr * dW3
+        # self.b3 -= self.lr * db3
+        # layer 1
+        self.vW1 = self.momentum * self.vW1 - self.lr * dW1
+        self.vb1 = self.momentum * self.vb1 - self.lr * db1
+        self.W1 += self.vW1
+        self.b1 += self.vb1
+
+        # layer 2
+        self.vW2 = self.momentum * self.vW2 - self.lr * dW2
+        self.vb2 = self.momentum * self.vb2 - self.lr * db2
+        self.W2 += self.vW2
+        self.b2 += self.vb2
+
+        # output layer
+        self.vW3 = self.momentum * self.vW3 - self.lr * dW3
+        self.vb3 = self.momentum * self.vb3 - self.lr * db3
+        self.W3 += self.vW3
+        self.b3 += self.vb3
 
     ## Training Loop
     def train(self, X, y, epochs=100, batch_size=64):
@@ -108,7 +138,7 @@ class MLP:
 
             self.lr *= 0.995
 
-            if epoch % 50 == 0:
+            if epoch % 20 == 0:
                 print(f"Epoch {epoch}, Loss: {loss}")
         
         print("Model training complete.")
