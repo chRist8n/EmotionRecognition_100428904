@@ -97,7 +97,7 @@ class MLP:
 
             # self.lr *= 0.995
 
-            if epoch % 20 == 0:
+            if epoch % 50 == 0:
                 print(f"Epoch {epoch}, Loss: {loss}")
 
 
