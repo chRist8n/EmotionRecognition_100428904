@@ -49,12 +49,15 @@ label_map = {
     "7": 0   # Neutral
 }
 
-X = []
-y = []
 
-dataset_types = ["train", "test"]          # <==== CHANGE THIS DEPENDING ON WHETHER ITS A TESTING SET OR TRAINING SET ("test"/"train")
+
+dataset_types = ["train", "test"]
 
 for dataset_type in dataset_types:
+    X = []
+    y = []
+    
+    print(f"Starting processing for {dataset_type}ing set.")
 
     BASE_DIR = os.path.dirname(os.path.dirname(__file__))
     DATA_PATH = os.path.join(BASE_DIR, "data", "raw", "RAF_DB", "DATASET", dataset_type)
