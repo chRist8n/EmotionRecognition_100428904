@@ -14,7 +14,6 @@ class MLP:
         self.W3 = np.random.randn(hidden_size_2, output_size) * 0.05
         self.b3 = np.zeros((1, output_size))
 
-        #self.momentum = 0.9
 
     ## Forward Pass
     def relu(self, x):
@@ -81,7 +80,7 @@ class MLP:
         self.b3 -= self.lr * db3
 
     ## Training Loop
-    def train(self, X, y, epochs=100, batch_size=64):
+    def train(self, X, y, epochs=100, batch_size=32):
         class_counts = np.bincount(y)
         class_weights = np.median(class_counts) / (class_counts + 1e-6)
         self.class_weights = class_weights / np.mean(class_weights)
@@ -108,7 +107,7 @@ class MLP:
 
             self.lr *= 0.995
 
-            if epoch % 50 == 0:
+            if epoch % 25 == 0:
                 print(f"Epoch {epoch}, Loss: {loss}")
         
         print("Model training complete.")
