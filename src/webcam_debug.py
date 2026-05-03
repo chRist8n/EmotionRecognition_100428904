@@ -45,7 +45,7 @@ landmarker = FaceLandmarker.create_from_options(options)
 X_train = np.load("data/processed/train/X.npy")
 y_train = np.load("data/processed/train/y.npy")
 
-model = mlp.MLP(input_size=19, hidden_size_1=64, hidden_size_2=32, output_size=7)
+model = mlp.MLP(input_size=12, hidden_size_1=64, hidden_size_2=32, output_size=7)
 model.train(X_train, y_train, epochs=300)
 
 
@@ -66,6 +66,9 @@ emotion_history = deque(maxlen=5)
 prev_feedback = None
 prev_smooth_landmarks = None
 prev_smooth_box = None
+
+mean = np.load("data/processed/train/mean.npy")
+std = np.load("data/processed/train/std.npy")
 
 
 # open webcam (0 = default camera)
@@ -184,7 +187,9 @@ try:
             rot_x, rot_y = M @ vec
             aligned_points.append((rot_x, rot_y))
 
+
         # 4.2) normalise
+        
         #normalise aligned points
         norm_aligned_points = [(x / bw, y / bh) for (x, y) in aligned_points]
 
@@ -207,8 +212,6 @@ try:
         features = feature_extraction.extract_features(na_points)
 
         #normalise features
-        mean = np.load("data/processed/train/mean.npy")
-        std = np.load("data/processed/train/std.npy")
 
         features = np.array(features)
         features = (features - mean) / (std + 1e-6)

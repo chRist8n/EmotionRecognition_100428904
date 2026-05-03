@@ -147,7 +147,7 @@ for dataset_type in dataset_types:
     else:
         print("Error saving data - No dataset_type ('test'/'train') given.")
 
-    print(dataset_type, ": Done:")
+    print(f"    {dataset_type}ing set: Done")
     print("Samples:", len(X))
     print("Feature size:", X.shape[1])
     print("Mean:", mean)
