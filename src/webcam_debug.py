@@ -61,7 +61,9 @@ label_map = {
 }
 
 
-emotion_history = deque(maxlen=5)
+HISTORY_SIZE = 10
+emotion_history = deque(maxlen=HISTORY_SIZE)
+prob_history = deque(maxlen=HISTORY_SIZE)
 
 prev_feedback = None
 prev_smooth_landmarks = None
@@ -229,11 +231,17 @@ try:
         # probs = test_model.predict_proba(features)[0]
         
 
-        if confidence < 0.15:
+        prob_history.append(probs)
+        avg_probs = np.mean(prob_history, axis=0)
+        pred = np.argmax(avg_probs)
+        avg_conf = np.max(avg_probs)
+
+        if avg_conf < 0.3:#confidence < 0.15:
             pred_label = "uncertain"
         else:
-            emotion_history.append(pred)
-            pred_label = max(set(emotion_history), key=emotion_history.count)
+            pred_label = pred
+            #emotion_history.append(pred)
+            #pred_label = max(set(emotion_history), key=emotion_history.count)
 
 
 

@@ -45,6 +45,15 @@ def extract_features(points):
     brow_height_mean = (left_brow_height + right_brow_height) / 2
     brow_asymmetry = abs(left_brow_height - right_brow_height)
 
+    # inner brow shape
+    inner_brow = compute_centre(points, [70, 300])
+    outer_brow = compute_centre(points, [63, 293])
+
+    inner_brow_height = (left_eye_centre[1] - inner_brow[1]) / face_width
+    outer_brow_height = (left_eye_centre[1] - outer_brow[1]) / face_width
+
+    brow_shape = inner_brow_height - outer_brow_height
+
     # ---------------- MOUTH ---------------- #
 
     mouth_top = points[13]
@@ -60,6 +69,10 @@ def extract_features(points):
 
     mouth_asymmetry = abs(mouth_left[1] - mouth_right[1]) / face_width
 
+    mouth_corner_drop = (
+        ((mouth_left[1] + mouth_right[1]) / 2) - mouth_top[1]
+    ) / face_width
+
     # ---------------- GLOBAL FACE ---------------- #
 
     mouth_centre = compute_centre(points, [13, 14, 78, 308])
@@ -71,6 +84,9 @@ def extract_features(points):
 
     smile_strength = mouth_width * mouth_open
     neutral_tension = abs(mouth_open) + abs(brow_height_mean) + abs(mouth_curve)
+
+    eye_brow_ratio = eye_open_mean / (brow_height_mean + 1e-6)  #how open are eyes relative to brow height
+    mouth_eye_balance = mouth_open - eye_open_mean              #eye vs mouth openness
 
     face_asymmetry = eye_open_diff + brow_asymmetry + mouth_asymmetry
 
