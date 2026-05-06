@@ -1,7 +1,7 @@
 import numpy as np
 
 class MLP:
-    def __init__(self, input_size, hidden_size_1, hidden_size_2, output_size, lr=0.1):
+    def __init__(self, input_size, hidden_size_1, hidden_size_2, output_size, lr=0.05):
         self.lr = lr
 
         # weights

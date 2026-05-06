@@ -23,3 +23,9 @@ def smooth_box(prev, current, pos_alpha=0.5, size_alpha=0.5):
         size_alpha * pw + (1 - size_alpha) * cw,    #width
         size_alpha * ph + (1 - size_alpha) * ch     #height
     )
+
+def smooth_predictions(prev, current, alpha=0.6):
+    if len(prev) == 0:
+        return current
+    else:
+        return alpha * current + (1 - alpha) * prev[-1]

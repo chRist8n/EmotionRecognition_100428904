@@ -24,6 +24,7 @@ import landmarking.smoothing as smoothing
 import landmarking.feature_extraction as feature_extraction
 #from classification.MLP_test import model as test_model
 import classification.MLP as mlp
+from landmarking.smoothing import smooth_predictions
 
 
 BaseOptions = python.BaseOptions
@@ -45,7 +46,7 @@ landmarker = FaceLandmarker.create_from_options(options)
 X_train = np.load("data/processed/train/X.npy")
 y_train = np.load("data/processed/train/y.npy")
 
-model = mlp.MLP(input_size=12, hidden_size_1=64, hidden_size_2=32, output_size=7)
+model = mlp.MLP(input_size=15, hidden_size_1=64, hidden_size_2=32, output_size=7)
 model.train(X_train, y_train, epochs=300)
 
 
@@ -61,7 +62,7 @@ label_map = {
 }
 
 
-HISTORY_SIZE = 10
+HISTORY_SIZE = 5
 emotion_history = deque(maxlen=HISTORY_SIZE)
 prob_history = deque(maxlen=HISTORY_SIZE)
 
@@ -226,15 +227,16 @@ try:
         probs = model.predict_proba(features)[0]
         confidence = max(probs)
 
-        # #features = np.array(features).reshape(1, -1)
-        # pred = test_model.predict(features)[0]
-        # probs = test_model.predict_proba(features)[0]
         
+        smooth_probs = smooth_predictions(prob_history, probs)
+        prob_history.append(smooth_probs)
 
-        prob_history.append(probs)
-        avg_probs = np.mean(prob_history, axis=0)
-        pred = np.argmax(avg_probs)
-        avg_conf = np.max(avg_probs)
+        pred = np.argmax(smooth_probs)
+        avg_conf = np.max(smooth_probs)
+
+        # avg_probs = np.mean(prob_history, axis=0)
+        # pred = np.argmax(avg_probs)
+        # avg_conf = np.max(avg_probs)
 
         if avg_conf < 0.3:#confidence < 0.15:
             pred_label = "uncertain"
@@ -292,7 +294,7 @@ try:
 
         cv2.putText(
             debug,
-            f"{label_map.get(pred_label)} ({confidence:.2f})",
+            f"{label_map.get(pred_label)} ({avg_conf:.2f})",
             (30, 40),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,

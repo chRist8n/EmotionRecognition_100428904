@@ -128,7 +128,7 @@ for dataset_type in dataset_types:
 
         files = [os.path.join(folder_path, f) for f in os.listdir(folder_path)]
         for file in files:
-            tasks.append(file, label)
+            tasks.append((file, label))
 
 
     with ProcessPoolExecutor(initializer=init_worker) as executor:

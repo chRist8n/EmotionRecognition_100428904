@@ -83,7 +83,7 @@ def extract_features(points):
     # ---------------- EXPRESSIVE SIGNALS ---------------- #
 
     smile_strength = mouth_width * mouth_open
-    neutral_tension = abs(mouth_open) + abs(brow_height_mean) + abs(mouth_curve)
+    #neutral_tension = abs(mouth_open) + abs(brow_height_mean) + abs(mouth_curve)
 
     eye_brow_ratio = eye_open_mean / (brow_height_mean + 1e-6)  #how open are eyes relative to brow height
     mouth_eye_balance = mouth_open - eye_open_mean              #eye vs mouth openness
@@ -93,26 +93,29 @@ def extract_features(points):
     # ---------------- FINAL FEATURE VECTOR ---------------- #
 
     features.extend([
-        # eyes
+        ## eyes
         eye_open_mean,
         eye_open_diff,
 
-        # brows
+        ## brows
         brow_height_mean,
         brow_asymmetry,
+        brow_shape,
 
-        # mouth
+        ## mouth
         mouth_open,
         mouth_width,
         mouth_curve,
         mouth_asymmetry,
+        mouth_corner_drop,
 
         # global structure
         eye_mouth_dist,
 
-        # expressive summary signals
+        ## expressive summary signals
         smile_strength,
-        neutral_tension,
+        eye_brow_ratio,
+        mouth_eye_balance,
         face_asymmetry
     ])
 
