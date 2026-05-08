@@ -12,11 +12,22 @@ export default function App() {
       }
     );
 
+
     callFrame.join({
       url: "https://emotion-recognition.daily.co/emotion-recognition",
     });
 
     return () => {
+      //when quitting, close everything
+      const tracks = callFrame.localParticipant?.tracks;
+
+      if (tracks) {
+        Object.values(tracks).forEach(t => {
+          if (t?.track?.stop) t.track.stop();
+        });
+      }
+
+      callFrame.leave();
       callFrame.destroy();
     };
   }, []);
