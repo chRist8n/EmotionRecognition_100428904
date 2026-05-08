@@ -1,47 +1,24 @@
+from fastapi import FastAPI, File, UploadFile
 import numpy as np
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import classification_report
+import cv2
 
-import classification.MLP as mlp
+app = FastAPI()
 
-X_train = np.load("backend/data/processed/train/X.npy")
-y_train = np.load("backend/data/processed/train/y.npy")
+@app.post("/predict")
+async def predict(file: UploadFile = File(...)):
+    contents = await file.read()
 
-X_test = np.load("backend/data/processed/test/X.npy")
-y_test = np.load("backend/data/processed/test/y.npy")
+    # decode image from frontend
+    np_arr = np.frombuffer(contents, np.uint8)
+    img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
+    # TODO: your pipeline here
+    # landmarks → features → model
 
-def main():
-    #Test MLP
-    model = mlp.MLP(input_size=15, hidden_size_1=64, hidden_size_2=32, output_size=7)
-    model.train(X_train, y_train, epochs=300)
+    emotion = "happy"  # placeholder
+    confidence = 0.82
 
-    preds = model.predict(X_test)
-
-    print("\n\nDone: \n")
-
-    print("Pred shape:", preds.shape)
-    print("Test shape:", y_test.shape)
-
-    accuracy = np.mean(preds == y_test)
-    print("Accuracy:", accuracy)
-
-    print("Pred counts:", np.bincount(preds))
-    print("True counts:", np.bincount(y_test))
-    print(confusion_matrix(y_test, preds))
-
-    print(classification_report(y_test, preds))
-
-
-    # X = np.random.rand(1, 23)
-    # #X = np.random.rand(5, 23)
-
-    # output = model.forward(X)
-    # print("output:", output)
-    # print("shape:", output.shape)
-
-    # print(np.sum(output, axis=1))
-
-
-if __name__ == "__main__":
-   main()
+    return {
+        "emotion": emotion,
+        "confidence": float(confidence)
+    }
