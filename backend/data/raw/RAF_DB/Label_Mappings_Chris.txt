@@ -1,0 +1,9 @@
+Emotion numbers:
+
+1 - Surprise
+2 - Fear
+3 - Disgust
+4 - Happy
+5 - Sad
+6 - Angry
+7 - Neutral
