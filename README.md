@@ -17,7 +17,7 @@ A lightweight multilayer perceptron (MLP) is used to classify each frame into on
     5 Fear
     6 Disgust
 
-The system is intended as a proof-of-concept for integrating traditional computer vision techniques with real-time communication platforms, demonstrating both the challenges and feasibility of emotion-aware video conferencing systems.
+The system serves as a proof-of-concept for integrating traditional computer vision techniques with real-time communication platforms, demonstrating both the challenges and feasibility of emotion-aware video conferencing systems.
 
 ## Pipeline
 To prepare for development, I broke the problem down into distinct modular stages, creating a pipeline as shown below:
@@ -32,6 +32,15 @@ To prepare for development, I broke the problem down into distinct modular stage
                             5)  feature extraction
                             6)  classification
                             -   output
+
+## Model
+
+- Input: 15 engineered facial geometry features
+- Architecture: 2-layer MLP (64 → 32 → 7)
+- Output: 7 emotion classes
+- Implementation: NumPy-based forward propagation
+- Temporal smoothing applied to outputs
+- Accuracy: ~58–59% (imbalanced dataset limitations)
 
 
 ## Dependencies
