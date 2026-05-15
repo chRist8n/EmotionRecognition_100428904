@@ -22,7 +22,7 @@ The system is intended as a proof-of-concept for integrating traditional compute
 ## Pipeline
 To prepare for development, I broke the problem down into distinct modular stages, creating a pipeline as shown below:
 
-                            -   recieve frame
+                            -   receive frame
                             1)  detect face and create face mesh
                             2)  validation and quality checks
                                 -   fallback to previous frame if needed
