@@ -19,16 +19,20 @@ export default function App() {
 
     return () => {
       //when quitting, close everything
-      const tracks = callFrame.localParticipant?.tracks;
+      const shutdown = () => {
+        const tracks = callFrame.localParticipant?.tracks;
 
-      if (tracks) {
-        Object.values(tracks).forEach(t => {
-          if (t?.track?.stop) t.track.stop();
-        });
+        if (tracks) {
+          Object.values(tracks).forEach(t => {
+            if (t?.track?.stop) t.track.stop();
+          });
+        }
+
+        callFrame.leave();
+        callFrame.destroy();
       }
 
-      callFrame.leave();
-      callFrame.destroy();
+      shutdown();
     };
   }, []);
 
