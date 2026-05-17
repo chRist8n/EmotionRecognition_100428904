@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 
-import classification.MLP as mlp
+import MLP as mlp
 
 X_train = np.load("backend/data/processed/train/X.npy")
 y_train = np.load("backend/data/processed/train/y.npy")
@@ -19,6 +19,9 @@ def main():
     preds = model.predict(X_test)
 
     print("\n\nDone: \n")
+
+    np.save("backend/figure_generation/y_pred.npy", preds)
+    np.save("backend/figure_generation/y_true.npy", y_test)
 
     print("Pred shape:", preds.shape)
     print("Test shape:", y_test.shape)
