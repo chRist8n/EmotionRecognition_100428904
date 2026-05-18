@@ -86,6 +86,13 @@ This project requires:
 - Python 3.10+ may work
 - Python 3.14 is not supported due to dependency limitations (e.g. MediaPipe)
 
+It is recommended to run this project inside a Python virtual environment to ensure dependency isolation and Python version compatability.
+
+This can be achieved using venv:
+
+```bash
+python -3.11 -m venv venv
+```
   
 ## Python Packages
 
