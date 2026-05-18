@@ -78,6 +78,15 @@ Feature extraction is consistent between training and real-time inference to ens
 - Accuracy: ~58–59% (imbalanced dataset limitations)
 
 
+## Python Version Requirement
+
+This project requires:
+
+- Python 3.11.x (recommended)
+- Python 3.10+ may work
+- Python 3.14 is not supported due to dependency limitations (e.g. MediaPipe)
+
+  
 ## Python Packages
 
 Install backend dependencies using:
