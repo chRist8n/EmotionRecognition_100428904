@@ -171,9 +171,6 @@ for dataset_type in dataset_types:
 
         np.save("backend/data/processed/test/X.npy", X)
         np.save("backend/data/processed/test/y.npy", y)
-
-        # np.save("data/processed/test/mean.npy", mean)
-        # np.save("data/processed/test/std.npy", std)
     else:
         print("Error saving data - No dataset_type ('test'/'train') given.")
 
