@@ -91,8 +91,20 @@ It is recommended to run this project inside a Python virtual environment to ens
 This can be achieved using venv:
 
 ```bash
-python -3.11 -m venv venv
+py -3.11 -m venv venv
 ```
+
+This must be activated before use using:
+
+Windows:
+```bash
+venv\Scripts\activate
+```
+MacOS/Linux
+```bash
+source venv/bin/activate
+```
+
   
 ## Python Packages
 
