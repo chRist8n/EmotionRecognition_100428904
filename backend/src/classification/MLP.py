@@ -24,6 +24,12 @@ class MLP:
         return exp / np.sum(exp, axis=1, keepdims=True)
     
     def forward(self, X):
+        """
+        Performs forward propagation through the network by applying
+        linear transformations and ReLU activations across two hidden
+        layers, followed by a softmax output layer to produce emotion
+        class probability predictions.
+        """
         self.Z1 = X @ self.W1 + self.b1
         self.A1 = self.relu(self.Z1)
 
@@ -80,11 +86,20 @@ class MLP:
         self.b3 -= self.lr * db3
 
     ## Training Loop
-    def train(self, X, y, epochs=100, batch_size=32):
+    def train(self, X, y, epochs, batch_size=32):
+        """
+        Trains the MLP model using mini-batch gradient descent over a specified number of epochs.
+
+        The training process includes dataset shuffling at each epoch, division into mini-batches,
+        forward propagation to compute predictions, loss calculation, and backpropagation to
+        update model weights. Class weighting is applied to reduce the impact of dataset imbalance.
+
+        The learning rate is exponentially decayed after each epoch to encourage stable convergence.
+        Training progress is periodically printed to monitor loss over time.
+        """
         class_counts = np.bincount(y)
         class_weights = np.median(class_counts) / (class_counts + 1e-6)
         self.class_weights = class_weights / np.mean(class_weights)
-        #self.class_weights = (median / counts) ** 0.5
 
         for epoch in range(epochs):
             perm = np.random.permutation(len(X))
@@ -100,11 +115,6 @@ class MLP:
 
                 self.backward(X_batch, y_batch)
 
-            # y_pred = self.forward(X)
-            # loss = self.compute_loss(y_pred, y)
-
-            # self.backward(X, y)
-
             self.lr *= 0.995
 
             if epoch % 25 == 0:
@@ -114,9 +124,17 @@ class MLP:
 
 
     def predict_proba(self, X):
+        """
+        Returns class probability distribution from the trained model
+        using forward propagation and softmax output layer.
+        """
         return self.forward(X)
 
     ## Prediction
     def predict(self, X):
+        """
+        Returns predicted emotion class by selecting the highest
+        probability output from the model.
+        """
         probs = self.forward(X)
         return np.argmax(probs, axis=1)

@@ -1,6 +1,7 @@
 import os
 import cv2
 import numpy as np
+from concurrent.futures import ProcessPoolExecutor
 
 from landmarking.landmark_detector import detect_landmarks
 from landmarking.feature_extraction import extract_features
@@ -16,12 +17,12 @@ VisionRunningMode = vision.RunningMode
 
 model_path = os.path.join(os.path.dirname(__file__), "models", "face_landmarker.task")
 
-options = FaceLandmarkerOptions(
-    base_options=BaseOptions(model_asset_path=model_path),
-    running_mode=VisionRunningMode.IMAGE,
-    num_faces=1
-)
-landmarker = FaceLandmarker.create_from_options(options)
+# options = FaceLandmarkerOptions(
+#     base_options=BaseOptions(model_asset_path=model_path),
+#     running_mode=VisionRunningMode.IMAGE,
+#     num_faces=1
+# )
+# landmarker = FaceLandmarker.create_from_options(options)
 
 #############################################################
 
@@ -38,6 +39,56 @@ Original mappings:   -->    New mappings:
 6 - Angry                   5 - Fear
 7 - Neutral                 6 - Disgust
 """
+
+
+
+def init_worker():
+    global landmarker
+    options = FaceLandmarkerOptions(
+        base_options=BaseOptions(model_asset_path=model_path),
+        running_mode=VisionRunningMode.IMAGE,
+        num_faces=1
+    )
+    landmarker = FaceLandmarker.create_from_options(options)
+
+def process_image(args):
+    img_path, label = args
+
+    # load image
+    img = cv2.imread(img_path)
+    if img is None:
+    #    print("Image missing from file ", file)
+        return None
+    #else:
+    #    print("Load Image: Success for file ", file)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.resize(img, (256, 256))
+
+    # landmark image
+    landmark_result = detect_landmarks(img, landmarker)
+    if landmark_result is None or not landmark_result.face_landmarks:
+        #print("    Landmarks not detected in file ", file, " - path=", img_path)
+        return None
+    #else:
+        #print("Landmarks: Success for file ", file)
+
+    landmarks = landmark_result.face_landmarks[0]
+    h, w = img.shape[:2]
+    points = [
+        (lm.x * w, lm.y * h)
+        for lm in landmarks
+    ]
+
+    # extract features from landmarks
+    features = extract_features(points)
+    if features is None:
+        #print("    Features not extracted from file ", file, " - path=", img_path)
+        return None
+    #else:
+        #print("Features: Success for file ", file)
+
+    return features, label
+
 
 label_map = {
     "1": 4,  # Surprise
@@ -65,54 +116,28 @@ for dataset_type in dataset_types:
 
     #############################################################
 
+    tasks = []
 
     for folder_name in os.listdir(DATA_PATH):
-        folder_path = os.path.join(DATA_PATH, folder_name)
-
         if folder_name not in label_map:
             print("Unexpected folder - ", folder_name)
             continue
 
         label = label_map[folder_name]
+        folder_path = os.path.join(DATA_PATH, folder_name)
 
         files = [os.path.join(folder_path, f) for f in os.listdir(folder_path)]
         for file in files:
-            img_path = os.path.join(folder_path, file)
+            tasks.append((file, label))
 
-            # load image
-            img = cv2.imread(img_path)
-            if img is None:
-            #    print("Image missing from file ", file)
-                continue
-            #else:
-            #    print("Load Image: Success for file ", file)
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            img = cv2.resize(img, (256, 256))
 
-            # landmark image
-            landmark_result = detect_landmarks(img, landmarker)
-            if landmark_result is None or not landmark_result.face_landmarks:
-                #print("    Landmarks not detected in file ", file, " - path=", img_path)
-                continue
-            #else:
-                #print("Landmarks: Success for file ", file)
+    with ProcessPoolExecutor(initializer=init_worker) as executor:
+        results = list(executor.map(process_image, tasks))
 
-            landmarks = landmark_result.face_landmarks[0]
-            h, w = img.shape[:2]
-            points = [
-                (lm.x * w, lm.y * h)
-                for lm in landmarks
-            ]
-
-            # extract features from landmarks
-            features = extract_features(points)
-            if features is None:
-                #print("    Features not extracted from file ", file, " - path=", img_path)
-                continue
-            #else:
-                #print("Features: Success for file ", file)
-
+    for r in results:
+        if r is not None:
             # add to X and y
+            features, label = r
             X.append(features)
             y.append(label)
 
@@ -124,27 +149,31 @@ for dataset_type in dataset_types:
     y = np.array(y, dtype=np.int32)
 
 
-    mean = X.mean(axis=0)
-    std = X.std(axis=0)
-
-    X = (X - mean) / (std + 1e-6)
-
 
     # save dataset
     os.makedirs("backend/data/processed", exist_ok=True)
 
-    if dataset_type == "test":
-        np.save("backend/data/processed/test/X.npy", X)
-        np.save("backend/data/processed/test/y.npy", y)
+    if dataset_type == "train":
+        mean = X.mean(axis=0)
+        std = X.std(axis=0)
 
-        np.save("backend/data/processed/test/mean.npy", mean)
-        np.save("backend/data/processed/test/std.npy", std)
-    elif dataset_type == "train":
+        X = (X - mean) / (std + 1e-6)
+
         np.save("backend/data/processed/train/X.npy", X)
         np.save("backend/data/processed/train/y.npy", y)
 
         np.save("backend/data/processed/train/mean.npy", mean)
         np.save("backend/data/processed/train/std.npy", std)
+    elif dataset_type == "test":
+        mean = np.load("backend/data/processed/train/mean.npy")
+        std = np.load("backend/data/processed/train/std.npy")
+        X = (X - mean) / (std + 1e-6)
+
+        np.save("backend/data/processed/test/X.npy", X)
+        np.save("backend/data/processed/test/y.npy", y)
+
+        # np.save("data/processed/test/mean.npy", mean)
+        # np.save("data/processed/test/std.npy", std)
     else:
         print("Error saving data - No dataset_type ('test'/'train') given.")
 

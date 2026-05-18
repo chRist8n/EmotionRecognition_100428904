@@ -18,6 +18,25 @@ def clamp(x, min_val=-3.0, max_val=3.0):
 
 
 def extract_features(points):
+    """
+    Extracts a fixed-length feature vector from MediaPipe facial landmarks.
+
+    The function converts raw landmark coordinates into a set of 15 engineered
+    geometric features representing key facial expression signals.
+
+    These features capture variations in:
+    - eye openness and asymmetry
+    - eyebrow height, shape, and symmetry
+    - mouth opening, width, and curvature
+    - global facial structure relationships
+    - combined expressive interaction signals
+
+    All features are normalised using face-width scaling to reduce sensitivity
+    to scale and distance from the camera.
+
+    Returns:
+        list[float]: A 15-dimensional feature vector used as input to the MLP classifier.
+    """
 
     features = []
 
@@ -83,7 +102,6 @@ def extract_features(points):
     # ---------------- EXPRESSIVE SIGNALS ---------------- #
 
     smile_strength = mouth_width * mouth_open
-    #neutral_tension = abs(mouth_open) + abs(brow_height_mean) + abs(mouth_curve)
 
     eye_brow_ratio = eye_open_mean / (brow_height_mean + 1e-6)  #how open are eyes relative to brow height
     mouth_eye_balance = mouth_open - eye_open_mean              #eye vs mouth openness

@@ -27,6 +27,21 @@ import classification.MLP as mlp
 from landmarking.smoothing import smooth_predictions
 
 
+## Debugging ##
+import time
+import psutil, os
+
+process = psutil.Process(os.getpid())
+cpu_samples = []
+
+fps_counter = 0
+fps_start = time.time()
+
+fps_samples = []
+latencies = []
+## Debugging end ##
+
+
 BaseOptions = python.BaseOptions
 FaceLandmarker = vision.FaceLandmarker
 FaceLandmarkerOptions = vision.FaceLandmarkerOptions
@@ -75,7 +90,9 @@ std = np.load("backend/data/processed/train/std.npy")
 
 
 # open webcam (0 = default camera)
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
+if not cap.isOpened():
+    raise RuntimeError("Webcam failed to open")
 
 try:
     frame_count = 0
@@ -94,6 +111,9 @@ try:
             continue        # if not ret, skip this frame
 
 
+        ## Debugging ##
+        start_time = time.perf_counter()
+        ## Debugging end ##
 
         ####################################################################
 
@@ -204,14 +224,6 @@ try:
 
 
         # 5) feature extraction
-
-        # # key features
-        # LEFT_EYE = [33, 133, 159, 145]
-        # RIGHT_EYE = [362, 263, 386, 374]
-        # MOUTH = [13, 14, 78, 308]
-        # LEFT_BROW = [70, 63]
-        # RIGHT_BROW = [300, 293]
-
         features = feature_extraction.extract_features(na_points)
 
         #normalise features
@@ -246,6 +258,27 @@ try:
             #pred_label = max(set(emotion_history), key=emotion_history.count)
 
 
+        ## Debugging ##
+        # FPS
+        fps_counter += 1
+
+        if time.time() - fps_start >= 1.0:
+            print("FPS:", fps_counter)
+            fps_samples.append(fps_counter)
+            fps_counter = 0
+            fps_start = time.time()
+
+        # latency
+        end_time = time.perf_counter()
+
+        latency_ms = (end_time - start_time) * 1000
+        latencies.append(latency_ms)
+
+        # CPU usage
+        if frame_count % 10 == 0:
+            cpu = process.cpu_percent(interval=None)
+            cpu_samples.append(cpu)
+        ## Debugging end ##
 
         ## PIPELINE END ##
 
@@ -313,6 +346,11 @@ try:
 
         #exit with [`] key
         if cv2.waitKey(1) & 0xFF == ord('`'):
+            ## Debug Outputs ##
+            print("Avg FPS:", sum(fps_samples)/len(fps_samples))
+            print("Avg latency:", sum(latencies)/len(latencies))
+            print("Avg CPU usage:", sum(cpu_samples)/len(cpu_samples))
+            ## Debug Outputs end ##
             break
 except Exception as e:
     #incase of exception, print to console
