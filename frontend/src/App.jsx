@@ -1,51 +1,44 @@
 import { useEffect, useRef } from "react";
 import DailyIframe from "@daily-co/daily-js";
 
-export default function App() {
-  const callFrameRef = useRef(null);
+function App() {
+  const containerRef = useRef(null);
+  const frameRef = useRef(null);
+  const joinedRef = useRef(false);
 
   useEffect(() => {
-    const callFrame = DailyIframe.createFrame(
-      callFrameRef.current,
-      {
-        showLeaveButton: true,
-      }
-    );
+    // prevents StrictMode double-mount + re-entry
+    if (joinedRef.current) return;
+    joinedRef.current = true;
 
-
-    callFrame.join({
-      url: "https://emotion-recognition.daily.co/emotion-recognition",
+    const frame = DailyIframe.createFrame(containerRef.current, {
+      showLeaveButton: true,
+      iframeStyle: {
+        width: "100%",
+        height: "100vh",
+        border: "0",
+      },
     });
 
+    frameRef.current = frame;
+
+    frame.join({ url: "https://emotion-recognition.daily.co/emotion-recognition" });
+
     return () => {
-      //when quitting, close everything
-      const shutdown = () => {
-        const tracks = callFrame.localParticipant?.tracks;
-
-        if (tracks) {
-          Object.values(tracks).forEach(t => {
-            if (t?.track?.stop) t.track.stop();
-          });
-        }
-
-        callFrame.leave();
-        callFrame.destroy();
-      }
-
-      shutdown();
+      frame.destroy();
+      frameRef.current = null;
+      joinedRef.current = false;
     };
   }, []);
 
   return (
-    <div
-      ref={callFrameRef}
-      style={{
-        position: "fixed",
-        inset: 0,
-        width: "100vw",
-        height: "100vh",
-        overflow: "hidden"
-      }}
-    />
+    <div>
+      <div ref={containerRef} />
+      <div style={{ position: "absolute", top: 20, left: 20 }}>
+        Emotion Output
+      </div>
+    </div>
   );
 }
+
+export default App;
