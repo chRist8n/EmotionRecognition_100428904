@@ -15,6 +15,8 @@ app.add_middleware(
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
+    #print("'/predict' endpoint triggered.")
+
     contents = await file.read()
 
     # decode image from frontend
