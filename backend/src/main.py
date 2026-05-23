@@ -1,35 +1,35 @@
-from fastapi import FastAPI, File, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
-import numpy as np
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 import cv2
+import numpy as np
 
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# store active connections per participant
+connections = {}
 
-@app.post("/predict")
-async def predict(file: UploadFile = File(...)):
-    #print("'/predict' endpoint triggered.")
+@app.websocket("/ws/{participant_id}")
+async def websocket_endpoint(websocket: WebSocket, participant_id: str):
+    await websocket.accept()
+    connections[participant_id] = websocket
 
-    contents = await file.read()
+    try:
+        while True:
+            # receive raw image bytes
+            data = await websocket.receive_bytes()
 
-    # decode image from frontend
-    np_arr = np.frombuffer(contents, np.uint8)
-    img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+            np_arr = np.frombuffer(data, np.uint8)
+            img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
-    # TODO: pipeline here
-    # landmarks → features → model
+            # ---- PIPELINE HERE ----
+            emotion = "happy"
+            confidence = 0.82
+            # -----------------------
 
-    emotion = "happy"  # placeholder
-    confidence = 0.82
+            await websocket.send_json({
+                "participant_id": participant_id,
+                "emotion": emotion,
+                "confidence": float(confidence)
+            })
 
-    return {
-        "emotion": emotion,
-        "confidence": float(confidence)
-    }
+    except WebSocketDisconnect:
+        del connections[participant_id]
