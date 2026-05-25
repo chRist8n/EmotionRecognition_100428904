@@ -8,11 +8,10 @@ function App() {
   const canvasRef = useRef(document.createElement("canvas"));
 
   const [participants, setParticipants] = useState({});
-
-
+  const [inCall, setInCall] = useState(false);
 
   // ----------------------------
-  // 1. Join Daily call
+  // 1. Create Daily frame
   // ----------------------------
   useEffect(() => {
     const callFrame = DailyIframe.createFrame({
@@ -23,23 +22,40 @@ function App() {
       },
     });
 
-    callFrame.join({ url: "https://emotion-recognition.daily.co/emotion-recognition" });
     callFrameRef.current = callFrame;
 
+    // participant tracking
     callFrame.on("participant-joined", updateParticipants);
     callFrame.on("participant-updated", updateParticipants);
     callFrame.on("participant-left", updateParticipants);
 
     function updateParticipants() {
-      const p = callFrame.participants();
-      setParticipants(p);
+      setParticipants(callFrame.participants());
     }
+
+    // call state tracking (better than manual flags)
+    callFrame.on("joined-meeting", () => setInCall(true));
+    callFrame.on("left-meeting", () => setInCall(false));
+
+    // AUTO-ENTER PREJOIN SCREEN / CALL FLOW
+    callFrame.join({
+      url: "https://emotion-recognition.daily.co/emotion-recognition",
+    });
 
     return () => callFrame.destroy();
   }, []);
 
   // ----------------------------
-  // 2. Attach video elements
+  // 2. Leave call
+  // ----------------------------
+  const leaveCall = async () => {
+    if (!callFrameRef.current) return;
+
+    await callFrameRef.current.leave();
+  };
+
+  // ----------------------------
+  // 3. Attach video refs
   // ----------------------------
   const setVideoRef = (id, el) => {
     if (el) {
@@ -48,23 +64,20 @@ function App() {
   };
 
   // ----------------------------
-  // 3. WebSocket per participant
+  // 4. WebSockets per participant
   // ----------------------------
   useEffect(() => {
     Object.values(participants).forEach((p) => {
       const id = p.session_id;
       if (!id || socketsRef.current[id]) return;
 
-      const socket = new WebSocket(
-        `ws://localhost:8000/ws/${id}`
-      );
-
+      const socket = new WebSocket(`ws://localhost:8000/ws/${id}`);
       socketsRef.current[id] = socket;
     });
   }, [participants]);
 
   // ----------------------------
-  // 4. Capture frame helper
+  // 5. Frame capture
   // ----------------------------
   const captureFrame = (video) => {
     if (!video) return null;
@@ -83,9 +96,11 @@ function App() {
   };
 
   // ----------------------------
-  // 5. Streaming loop
+  // 6. Streaming loop
   // ----------------------------
   useEffect(() => {
+    if (!inCall) return;
+
     const interval = setInterval(async () => {
       const list = Object.values(participants);
       if (!list.length) return;
@@ -102,19 +117,42 @@ function App() {
 
         socket.send(blob);
       }
-    }, 300); // adjust FPS here
+    }, 300);
 
     return () => clearInterval(interval);
-  }, [participants]);
+  }, [participants, inCall]);
 
   // ----------------------------
-  // 6. UI (Daily renders video elements itself)
+  // 7. UI
   // ----------------------------
   return (
     <div style={{ position: "relative" }}>
+
+      {/* Daily iframe */}
       <div id="call-container" />
 
-      {/* Hidden video refs (attach via DOM query later if needed) */}
+      {/* Leave button (only when in call) */}
+      {inCall && (
+        <button
+          onClick={leaveCall}
+          style={{
+            position: "absolute",
+            bottom: 20,
+            right: 20,
+            zIndex: 10,
+            padding: "12px 18px",
+            backgroundColor: "red",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+          }}
+        >
+          Leave Call
+        </button>
+      )}
+
+      {/* Hidden video refs */}
       {Object.values(participants).map((p) => (
         <video
           key={p.session_id}
@@ -129,6 +167,7 @@ function App() {
       <div style={{ position: "absolute", top: 10, left: 10 }}>
         Active participants: {Object.keys(participants).length}
       </div>
+
     </div>
   );
 }
